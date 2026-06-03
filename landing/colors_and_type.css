@@ -1,0 +1,248 @@
+/* ========================================================================
+   U사장님 — 빌리투어 상품화 Colors & Type
+   Brand: U 시그니처 블루 (Option A)
+   Primary Navy #1A3A6B · CTA Blue #2B85CC · Accent Gold #E8B84B
+   Font: Pretendard · Mobile-first 480px
+   ======================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&display=swap');
+
+:root {
+  /* ============================================================
+     COLOR — Brand
+     ============================================================ */
+  --brand-navy:       #1A3A6B;   /* U사장님 시그니처 네이비 */
+  --brand-navy-deep:  #0F2548;   /* 네이비 다크 */
+  --brand-navy-light: #E8EFF8;   /* 네이비 라이트 (배지 bg) */
+  --brand-gold:       #E8B84B;   /* 프리미엄 골드 액센트 */
+  --brand-gold-light: #FDF6E3;   /* 골드 라이트 배경 */
+
+  /* ============================================================
+     COLOR — Primary (CTA, 버튼, 링크, 포커스)
+     ============================================================ */
+  --primary-50:  #EEF6FF;
+  --primary-100: #DBEAFE;
+  --primary-200: #BFDBFE;
+  --primary-300: #93C5FD;
+  --primary-400: #2B85CC;   /* PRIMARY — 버튼, 링크, 포커스 */
+  --primary-500: #1E6FA8;   /* hover (darker) */
+  --info-bg:     #F0F7FF;
+
+  /* ============================================================
+     COLOR — Foreground (text)
+     ============================================================ */
+  --gray-900: #1A202C;   /* fg1 — 제목, 주요 텍스트 */
+  --gray-700: #4A5568;   /* fg2 — 본문 */
+  --gray-600: #4E5968;   /* 버튼 취소 텍스트 */
+  --gray-500: #718096;   /* fg3 — 라벨, 캡션 */
+  --gray-400: #A0AEC0;   /* fg4 — placeholder */
+  --gray-300: #CBD5E0;   /* 체크박스 border */
+
+  /* ============================================================
+     COLOR — Background / Surface
+     ============================================================ */
+  --bg-app:      #F8FAFC;
+  --bg-surface:  #FFFFFF;
+  --bg-info:     #F0F7FF;
+  --bg-navy:     #1A3A6B;   /* 다크 섹션 배경 */
+  --bg-navy-mid: #1B3E75;
+
+  /* ============================================================
+     COLOR — Border / Divider
+     ============================================================ */
+  --border-input:   #E2E8F0;
+  --border-divider: #F1F5F9;
+  --border-navy:    rgba(26, 58, 107, 0.2);
+
+  /* ============================================================
+     COLOR — Semantic
+     ============================================================ */
+  --success:     #00C73C;
+  --success-bg:  #E8FBF0;
+  --error:       #F04452;
+  --error-strong:#D92B2B;
+  --error-bg:    #FFF0F2;
+
+  /* ============================================================
+     COLOR — Overlay
+     ============================================================ */
+  --overlay-scrim: rgba(0, 0, 0, 0.45);
+
+  /* ============================================================
+     TYPE — Family
+     ============================================================ */
+  --font-sans: 'Pretendard', -apple-system, BlinkMacSystemFont,
+               'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+
+  /* ============================================================
+     TYPE — Scale
+     ============================================================ */
+  --fs-11: 11px;
+  --fs-12: 12px;
+  --fs-13: 13px;
+  --fs-14: 14px;
+  --fs-15: 15px;
+  --fs-16: 16px;
+  --fs-18: 18px;
+  --fs-20: 20px;
+  --fs-22: 22px;
+  --fs-24: 24px;
+  --fs-28: 28px;
+  --fs-32: 32px;
+  --fs-40: 40px;
+
+  /* ============================================================
+     TYPE — Weight
+     ============================================================ */
+  --fw-regular:  400;
+  --fw-medium:   500;
+  --fw-semibold: 600;
+  --fw-bold:     700;
+  --fw-extrabold:800;
+
+  /* ============================================================
+     TYPE — Line height
+     ============================================================ */
+  --lh-tight:   1.35;
+  --lh-normal:  1.5;
+  --lh-relaxed: 1.65;
+  --lh-loose:   1.75;
+
+  /* ============================================================
+     TYPE — Letter spacing
+     ============================================================ */
+  --ls-tight:  -0.4px;
+  --ls-normal:  0px;
+  --ls-wide:    0.3px;
+
+  /* ============================================================
+     SPACING — 4px base
+     ============================================================ */
+  --sp-1:  4px;
+  --sp-2:  8px;
+  --sp-3:  12px;
+  --sp-4:  16px;
+  --sp-5:  20px;
+  --sp-6:  24px;
+  --sp-7:  28px;
+  --sp-8:  32px;
+  --sp-10: 40px;
+  --sp-12: 48px;
+
+  /* ============================================================
+     RADII
+     ============================================================ */
+  --r-sm:   5px;
+  --r-md:   8px;
+  --r-lg:   12px;
+  --r-xl:   16px;
+  --r-2xl:  24px;
+  --r-full: 9999px;
+
+  /* ============================================================
+     SHADOW
+     ============================================================ */
+  --shadow-none:  none;
+  --shadow-card:  0 2px 12px rgba(26, 58, 107, 0.08);
+  --shadow-sheet: 0 -1px 0 var(--border-divider);
+  --shadow-cta:   0 4px 16px rgba(43, 133, 204, 0.3);
+
+  /* ============================================================
+     LAYOUT
+     ============================================================ */
+  --page-max:    480px;   /* 폼 max-width */
+  --landing-max: 1200px;  /* 랜딩 max-width */
+  --content-pad: 20px;
+
+  /* ============================================================
+     MOTION
+     ============================================================ */
+  --dur-fast:  0.15s;
+  --dur-base:  0.2s;
+  --dur-slow:  0.3s;
+  --ease-out:  cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spin: linear;
+}
+
+/* ============================================================
+   SEMANTIC ALIASES
+   ============================================================ */
+:root {
+  --fg-1: var(--gray-900);
+  --fg-2: var(--gray-700);
+  --fg-3: var(--gray-500);
+  --fg-4: var(--gray-400);
+  --fg-link: var(--primary-400);
+  --fg-on-primary: #FFFFFF;
+  --fg-on-navy: #FFFFFF;
+
+  --surface-app:     var(--bg-app);
+  --surface-card:    var(--bg-surface);
+  --surface-info:    var(--bg-info);
+  --surface-overlay: var(--overlay-scrim);
+
+  --border-default: var(--border-input);
+  --border-strong:  var(--gray-300);
+  --border-info:    var(--primary-200);
+
+  --state-focus:   var(--primary-400);
+  --state-valid:   var(--success);
+  --state-invalid: var(--error);
+}
+
+/* ============================================================
+   SEMANTIC TYPE STYLES
+   ============================================================ */
+.t-h1 {
+  font-family: var(--font-sans);
+  font-size: var(--fs-20);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-tight);
+  color: var(--fg-1);
+  letter-spacing: var(--ls-tight);
+}
+.t-h2 {
+  font-family: var(--font-sans);
+  font-size: var(--fs-18);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-tight);
+  color: var(--fg-1);
+}
+.t-label {
+  font-size: var(--fs-14);
+  font-weight: var(--fw-semibold);
+  color: var(--fg-1);
+  line-height: var(--lh-normal);
+}
+.t-body {
+  font-size: var(--fs-14);
+  font-weight: var(--fw-regular);
+  color: var(--fg-2);
+  line-height: var(--lh-relaxed);
+}
+.t-caption {
+  font-size: var(--fs-12);
+  font-weight: var(--fw-regular);
+  color: var(--fg-3);
+  line-height: var(--lh-normal);
+}
+.t-button {
+  font-size: var(--fs-16);
+  font-weight: var(--fw-bold);
+}
+
+/* ============================================================
+   GLOBAL RESET
+   ============================================================ */
+.u-reset *, .u-reset *::before, .u-reset *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+.u-reset {
+  font-family: var(--font-sans);
+  background: var(--surface-app);
+  color: var(--fg-1);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
