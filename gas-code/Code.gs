@@ -140,6 +140,26 @@ function submitForm(formData) {
 }
 
 /* ───────────────────────────────────────────
+   유튜브 영상 기본정보 조회 (oEmbed, 서버 경유 — CORS 우회)
+─────────────────────────────────────────── */
+function getYoutubeInfo(url) {
+  try {
+    var api = 'https://www.youtube.com/oembed?url=' + encodeURIComponent(url) + '&format=json';
+    var res = UrlFetchApp.fetch(api, { muteHttpExceptions: true });
+    if (res.getResponseCode() !== 200) return { ok: false };
+    var d = JSON.parse(res.getContentText());
+    return {
+      ok: true,
+      title: d.title || '',
+      channel: d.author_name || '',
+      thumbnail: d.thumbnail_url || ''
+    };
+  } catch (err) {
+    return { ok: false };
+  }
+}
+
+/* ───────────────────────────────────────────
    SOLAPI HMAC-SHA256 인증 헤더
 ─────────────────────────────────────────── */
 function getSolapiAuthHeader() {
@@ -400,6 +420,8 @@ function doPost(e) {
       };
     } else if (action === 'submitForm') {
       result = submitForm(payload);
+    } else if (action === 'ytInfo') {
+      result = getYoutubeInfo(payload.url);
     } else {
       result = { error: 'Unknown action: ' + action };
     }

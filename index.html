@@ -594,14 +594,18 @@
   }
 
   function loadYtInfo(url) {
-    fetch('https://www.youtube.com/oembed?url=' + encodeURIComponent(url) + '&format=json')
-      .then(function(r) { if (!r.ok) throw new Error('not found'); return r.json(); })
+    callAPI('ytInfo', { url: url })
       .then(function(d) {
-        ytInfo = { title: d.title || '', channel: d.author_name || '', thumbnail: d.thumbnail_url || '' };
+        if (!d || !d.ok) {
+          ytInfo = { title: '', channel: '', thumbnail: '' };
+          showYtNote('영상 정보를 불러오지 못했어요. 링크는 그대로 접수됩니다.');
+          return;
+        }
+        ytInfo = { title: d.title || '', channel: d.channel || '', thumbnail: d.thumbnail || '' };
         var p = document.getElementById('ytPreview');
         p.className = 'yt-preview'; p.style.display = 'flex';
         p.innerHTML =
-          '<img src="' + ytInfo.thumbnail + '" alt="">' +
+          (ytInfo.thumbnail ? '<img src="' + ytInfo.thumbnail + '" alt="">' : '') +
           '<div class="yt-meta">' +
           '<div class="yt-title">' + escapeHtml(ytInfo.title) + '</div>' +
           '<div class="yt-channel">' + escapeHtml(ytInfo.channel) + '</div></div>';
