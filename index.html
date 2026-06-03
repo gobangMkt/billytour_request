@@ -170,6 +170,25 @@
 
     .char-count { font-size: 12px; color: #B0B8C1; text-align: right; margin-top: 6px; }
 
+    /* 유튜브 자동 미리보기 */
+    .yt-preview {
+      margin-top: 10px; display: flex; gap: 12px; align-items: center;
+      background: #F8FAFF; border: 1.5px solid #A4CCE8; border-radius: 10px; padding: 10px;
+    }
+    .yt-preview img {
+      width: 104px; height: 58px; object-fit: cover; border-radius: 6px; flex-shrink: 0;
+    }
+    .yt-meta { min-width: 0; }
+    .yt-title {
+      font-size: 13px; font-weight: 600; color: #1A202C; line-height: 1.4;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .yt-channel { font-size: 12px; color: #8B95A1; margin-top: 4px; }
+    .yt-preview.note {
+      justify-content: center; padding: 14px; font-size: 13px; color: #8B95A1;
+      background: #F8FAFC; border-color: #E5E8EB;
+    }
+
     .notice-card {
       background: #F8FAFF;
       border: 1.5px solid #A4CCE8;
@@ -376,11 +395,20 @@
       </div>
 
       <div class="section">
-        <div class="section-title">빌리투어 URL</div>
+        <div class="section-title">지점 정보</div>
+        <div class="field">
+          <div class="field-label">지점명</div>
+          <input type="text" id="branchName" placeholder="예) 신촌점 / ○○하우스" autocomplete="off">
+        </div>
+        <div class="field">
+          <div class="field-label">지점 주소</div>
+          <input type="text" id="branchAddr" placeholder="도로명 주소를 입력해 주세요" autocomplete="off">
+        </div>
         <div class="field">
           <div class="field-label">유튜브 링크</div>
           <input type="url" id="tourUrl" placeholder="https://youtu.be/..." autocomplete="off">
           <div class="feedback" id="fb-url"></div>
+          <div id="ytPreview" class="yt-preview" style="display:none;"></div>
         </div>
       </div>
 
@@ -420,9 +448,9 @@
       </div>
 
       <div class="section">
-        <div class="section-title">추가 요청사항 (선택)</div>
+        <div class="section-title">촬영 전달사항 (선택)</div>
         <div class="field">
-          <textarea id="memo" placeholder="전달하고 싶은 내용을 자유롭게 입력해 주세요." maxlength="300"></textarea>
+          <textarea id="memo" placeholder="촬영 시 강조하고 싶은 공간, 동선, 감독님께 미리 전달하고 싶은 내용을 자유롭게 적어주세요." maxlength="300"></textarea>
           <div class="char-count"><span id="charCount">0</span>/300</div>
         </div>
       </div>
@@ -461,7 +489,7 @@
         <span style="font-size:11px;color:#8B95A1;" id="privacyArrow">▶ 내용 보기</span>
       </div>
       <div style="display:none;padding:12px 14px;font-size:12px;color:#4A5568;line-height:1.7;border-top:1px solid #E5E8EB;" id="privacyDetail">
-        <b>수집 항목</b> 이름, 휴대전화번호<br>
+        <b>수집 항목</b> 이름, 휴대전화번호, 지점명·지점주소<br>
         <b>수집 목적</b> 서비스 제공 및 신청 관리<br>
         <b>보유 기간</b> 서비스 종료 후 즉시 파기<br>
         <span style="color:#8B95A1;">동의 거부 시 서비스 이용이 제한될 수 있습니다.</span>
@@ -489,7 +517,6 @@
   </div>
   <h2>신청이 접수됐습니다!</h2>
   <p>담당자 확인 후<br>결제 링크를 발송드립니다.</p>
-  <a class="success-link" href="https://ch.io" target="_blank" rel="noopener">채널톡 상담하기</a>
 </div>
 
 <script>
@@ -545,19 +572,68 @@
     return /youtu\.be\//.test(val) || /youtube\.com\//.test(val);
   }
 
+  // 유튜브 영상 정보 자동 불러오기 (oEmbed)
+  var ytTimer = null;
+  var ytInfo = { title: '', channel: '', thumbnail: '' };
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function(c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function clearYtPreview() {
+    ytInfo = { title: '', channel: '', thumbnail: '' };
+    var p = document.getElementById('ytPreview');
+    p.style.display = 'none'; p.className = 'yt-preview'; p.innerHTML = '';
+  }
+
+  function showYtNote(msg) {
+    var p = document.getElementById('ytPreview');
+    p.className = 'yt-preview note'; p.style.display = 'flex'; p.textContent = msg;
+  }
+
+  function loadYtInfo(url) {
+    fetch('https://www.youtube.com/oembed?url=' + encodeURIComponent(url) + '&format=json')
+      .then(function(r) { if (!r.ok) throw new Error('not found'); return r.json(); })
+      .then(function(d) {
+        ytInfo = { title: d.title || '', channel: d.author_name || '', thumbnail: d.thumbnail_url || '' };
+        var p = document.getElementById('ytPreview');
+        p.className = 'yt-preview'; p.style.display = 'flex';
+        p.innerHTML =
+          '<img src="' + ytInfo.thumbnail + '" alt="">' +
+          '<div class="yt-meta">' +
+          '<div class="yt-title">' + escapeHtml(ytInfo.title) + '</div>' +
+          '<div class="yt-channel">' + escapeHtml(ytInfo.channel) + '</div></div>';
+        // 지점명이 비어 있으면 영상 제목으로 자동 채움 (수정 가능)
+        var bn = document.getElementById('branchName');
+        if (!bn.value.trim() && ytInfo.title) { bn.value = ytInfo.title; checkSubmit(); }
+      })
+      .catch(function() {
+        ytInfo = { title: '', channel: '', thumbnail: '' };
+        showYtNote('영상 정보를 불러오지 못했어요. 링크는 그대로 접수됩니다.');
+      });
+  }
+
   document.getElementById('tourUrl').addEventListener('input', function() {
     var val = this.value.trim();
+    clearTimeout(ytTimer);
     if (val.length === 0) {
-      this.className = ''; setFeedback('url', '', '');
+      this.className = ''; setFeedback('url', '', ''); clearYtPreview();
     } else if (isYoutubeUrl(val)) {
       this.className = 'valid'; setFeedback('url', 'ok', '올바른 유튜브 링크예요');
+      showYtNote('영상 정보를 불러오는 중...');
+      ytTimer = setTimeout(function() { loadYtInfo(val); }, 500);
     } else {
       this.className = 'invalid'; setFeedback('url', 'error', 'youtu.be 또는 youtube.com 링크를 입력해 주세요');
+      clearYtPreview();
     }
     checkSubmit();
   });
 
   document.getElementById('name').addEventListener('input', checkSubmit);
+  document.getElementById('branchName').addEventListener('input', checkSubmit);
+  document.getElementById('branchAddr').addEventListener('input', checkSubmit);
 
   document.getElementById('memo').addEventListener('input', function() {
     document.getElementById('charCount').textContent = this.value.length;
@@ -585,11 +661,15 @@
   function checkSubmit() {
     var name = document.getElementById('name').value.trim();
     var phone = document.getElementById('phone').value.trim();
+    var branchName = document.getElementById('branchName').value.trim();
+    var branchAddr = document.getElementById('branchAddr').value.trim();
     var url = document.getElementById('tourUrl').value.trim();
     var agreed = document.getElementById('agreeToggle').checked;
     var ok =
       name.length >= 2 &&
       /^010-\d{4}-\d{4}$/.test(phone) &&
+      branchName.length >= 1 &&
+      branchAddr.length >= 2 &&
       isYoutubeUrl(url) &&
       agreed === true;
     document.getElementById('submitBtn').disabled = !ok;
@@ -602,12 +682,16 @@
     e.preventDefault();
     var name = document.getElementById('name').value.trim();
     var phone = document.getElementById('phone').value.trim();
+    var branchName = document.getElementById('branchName').value.trim();
+    var branchAddr = document.getElementById('branchAddr').value.trim();
     var url = document.getElementById('tourUrl').value.trim();
     var product = getSelectedProduct();
 
     var rows = [
       { label: '이름', value: name },
       { label: '연락처', value: phone },
+      { label: '지점명', value: branchName },
+      { label: '지점 주소', value: branchAddr },
       { label: 'URL', value: url },
       { label: '선택 상품', value: getProductLabel(product) }
     ];
@@ -657,7 +741,11 @@
     callAPI('submitForm', {
       name: document.getElementById('name').value.trim(),
       phone: document.getElementById('phone').value.trim(),
+      branchName: document.getElementById('branchName').value.trim(),
+      branchAddr: document.getElementById('branchAddr').value.trim(),
       tourUrl: document.getElementById('tourUrl').value.trim(),
+      ytTitle: ytInfo.title,
+      ytChannel: ytInfo.channel,
       product: getSelectedProduct(),
       memo: document.getElementById('memo').value.trim()
     }).then(function(result) {
