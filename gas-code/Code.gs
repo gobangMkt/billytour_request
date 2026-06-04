@@ -2,6 +2,10 @@ var SPREADSHEET_ID    = '1VeaQZPEn9Wnf3Yz_2Empz9Hzg1sg4NvYjB6lz4a48QY';
 var TEMPLATE_PAYMENT  = '';  // SOLAPI 결제링크 알림톡 템플릿 ID
 var TEMPLATE_COMPLETE = '';  // 완료 알림 템플릿 ID (예비)
 
+// 토스 결제링크 (상품별) — 발송 시 상품 선택값에 따라 자동 매칭
+var PAY_LINK_GLOBAL = 'https://s.tosspayments.com/BnpMF3uoUf7';  // 글로벌재구매 (440,000)
+var PAY_LINK_SHORTS = 'https://s.tosspayments.com/BnpMF-HA2If';  // 숏츠단건 (110,000)
+
 /* ───────────────────────────────────────────
    설정 시트 읽기
    A열: 키, B열: 값
@@ -229,9 +233,11 @@ function handlePaymentSend(e, sheet, row) {
   var rowData = sheet.getRange(row, 1, 1, 13).getValues()[0];
   var phone   = String(rowData[3]).replace(/[^0-9]/g, '');  // D 연락처
   var name    = String(rowData[2] || '').trim();            // C 이름
+  var product = String(rowData[9] || '').trim();            // J 상품선택 (글로벌재구매/숏츠단건)
+  var payLink = product === '숏츠단건' ? PAY_LINK_SHORTS : PAY_LINK_GLOBAL;
 
   try {
-    sendAlimtalk(phone, TEMPLATE_PAYMENT, { '#{신청자}': name });
+    sendAlimtalk(phone, TEMPLATE_PAYMENT, { '#{신청자}': name, '#{결제링크}': payLink });
     sheet.getRange(row, 13).setValue(
       Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd HH:mm:ss')
     );

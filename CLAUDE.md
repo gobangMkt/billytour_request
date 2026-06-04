@@ -81,6 +81,18 @@ gas-code/
 
 ---
 
+## 토스 결제링크 (라이브)
+
+| 상품 | 결제액(VAT 포함) | 링크 | 실제 URL |
+|------|------|------|------|
+| 글로벌재구매 | 440,000 | https://s.tosspayments.com/BnpMF3uoUf7 | buy.tosspayments.com/products/tLBnpLpWL0 |
+| 숏츠단건 | 110,000 | https://s.tosspayments.com/BnpMF-HA2If | buy.tosspayments.com/products/IaBnpL6B4w |
+
+- GAS `Code.gs`의 `PAY_LINK_GLOBAL` / `PAY_LINK_SHORTS` 상수에 동일하게 박혀있음. 링크 교체 시 양쪽 모두 수정.
+- 알림톡 발송 시 신청 내역 J열(상품선택)이 `숏츠단건`이면 숏폼 링크, 그 외 글로벌 링크 자동 매칭 → `#{결제링크}` 변수로 전달.
+
+---
+
 ## GAS API
 
 ```js
