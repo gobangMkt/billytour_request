@@ -1,8 +1,11 @@
 var SPREADSHEET_ID    = '1VeaQZPEn9Wnf3Yz_2Empz9Hzg1sg4NvYjB6lz4a48QY';
-var TEMPLATE_PAYMENT  = '';  // SOLAPI 결제링크 알림톡 템플릿 ID
-var TEMPLATE_COMPLETE = '';  // 완료 알림 템플릿 ID (예비)
+// 결제요청 알림톡 — 상품별 템플릿 (버튼 URL에 토스링크가 직접 박혀있어 상품마다 분리)
+var TEMPLATE_PAYMENT_GLOBAL  = 'KA01TP260604073418605liV8A9eAgGY';  // 빌리투어_결제요청_글로벌
+var TEMPLATE_PAYMENT_SHORTS  = 'KA01TP260604074212590nlygYHB8w8t';  // 빌리투어_결제요청_숏츠
+var TEMPLATE_COMPLETE_GLOBAL = 'KA01TP260604101754901FfZqGa9ktQf';  // 빌리투어_작업완료_글로벌 (유튜브 업로드 완료)
+var TEMPLATE_COMPLETE_SHORTS = 'KA01TP260604101954648epByHA94rV6';  // 빌리투어_작업완료_숏츠 (릴스/인스타 업로드 완료)
 
-// 토스 결제링크 (상품별) — 발송 시 상품 선택값에 따라 자동 매칭
+// 토스 결제링크 (참고용 — 실제 발송은 위 템플릿 버튼에 박힌 URL 사용)
 var PAY_LINK_GLOBAL = 'https://s.tosspayments.com/BnpMF3uoUf7';  // 글로벌재구매 (440,000)
 var PAY_LINK_SHORTS = 'https://s.tosspayments.com/BnpMF-HA2If';  // 숏츠단건 (110,000)
 
@@ -140,6 +143,28 @@ function submitForm(formData) {
     workSheet.getRange(workSheet.getLastRow(), 11).setValue('발송대기');
   }
 
+  // 신청 접수 이메일 알림
+  try {
+    var NOTIFY_EMAIL = 'archoit94@neoflat.net';
+    var subject = '[빌리투어] 새 신청 접수 — ' + (formData.name || '') + ' / ' + productLabel;
+    var body = [
+      '새로운 빌리투어 신청이 접수됐어요.',
+      '',
+      '신청일시: ' + Utilities.formatDate(now, 'Asia/Seoul', 'yyyy-MM-dd HH:mm'),
+      '상품: ' + productLabel,
+      '이름: ' + (formData.name || ''),
+      '전화번호: ' + (formData.phone || ''),
+      '지점명: ' + (formData.branchName || ''),
+      '지점 주소: ' + (formData.branchAddr || ''),
+      '빌리투어 URL: ' + (formData.tourUrl || ''),
+      '영상 제목: ' + (formData.ytTitle || ''),
+      '채널명: ' + (formData.ytChannel || ''),
+      '',
+      '▶ 신청 내역 확인: https://docs.google.com/spreadsheets/d/' + SPREADSHEET_ID,
+    ].join('\n');
+    MailApp.sendEmail(NOTIFY_EMAIL, subject, body);
+  } catch(mailErr) {}
+
   return { success: true };
 }
 
@@ -215,8 +240,42 @@ function onEdit(e) {
 
   if (sheetName === '신청 내역' && col === 12) {
     handlePaymentSend(e, sheet, row);
+  } else if (sheetName === '신청 내역' && col === 2) {
+    handlePaymentComplete(e, sheet, row);
   } else if (sheetName === '작업 내역' && col === 11) {
     handleCompleteSend(e, sheet, row);
+  }
+}
+
+/* 신청 내역 B열(2): 결제완료일 입력 시 결제완료 알림메일 발송 */
+function handlePaymentComplete(e, sheet, row) {
+  if (!e.range.getValue()) return;  // B열 비우면 무시
+
+  try {
+    var rowData = sheet.getRange(row, 1, 1, 13).getValues()[0];
+    var name    = String(rowData[2] || '');   // C 이름
+    var phone   = String(rowData[3] || '');    // D 연락처
+    var branch  = String(rowData[4] || '');    // E 지점명
+    var tourUrl = String(rowData[6] || '');    // G 빌리투어URL
+    var product = String(rowData[9] || '');    // J 상품선택
+
+    var NOTIFY_EMAIL = 'archoit94@neoflat.net';
+    var subject = '[빌리투어] 결제 완료 — ' + name + ' / ' + product;
+    var body = [
+      '결제가 완료 처리됐어요.',
+      '',
+      '결제완료일: ' + e.range.getDisplayValue(),
+      '상품: ' + product,
+      '이름: ' + name,
+      '전화번호: ' + phone,
+      '지점명: ' + branch,
+      '빌리투어 URL: ' + tourUrl,
+      '',
+      '▶ 신청 내역 확인: https://docs.google.com/spreadsheets/d/' + SPREADSHEET_ID,
+    ].join('\n');
+    MailApp.sendEmail(NOTIFY_EMAIL, subject, body);
+  } catch(mailErr) {
+    Logger.log('결제완료 알림메일 실패: ' + mailErr);
   }
 }
 
@@ -233,11 +292,12 @@ function handlePaymentSend(e, sheet, row) {
   var rowData = sheet.getRange(row, 1, 1, 13).getValues()[0];
   var phone   = String(rowData[3]).replace(/[^0-9]/g, '');  // D 연락처
   var name    = String(rowData[2] || '').trim();            // C 이름
-  var product = String(rowData[9] || '').trim();            // J 상품선택 (글로벌재구매/숏츠단건)
-  var payLink = product === '숏츠단건' ? PAY_LINK_SHORTS : PAY_LINK_GLOBAL;
+  var product    = String(rowData[9] || '').trim();         // J 상품선택 (글로벌재구매/숏츠단건)
+  var isShorts   = product === '숏츠단건';
+  var templateId = isShorts ? TEMPLATE_PAYMENT_SHORTS : TEMPLATE_PAYMENT_GLOBAL;  // 결제링크는 템플릿 버튼에 박힘
 
   try {
-    sendAlimtalk(phone, TEMPLATE_PAYMENT, { '#{신청자}': name, '#{결제링크}': payLink });
+    sendAlimtalk(phone, templateId, { '#{신청자}': name });
     sheet.getRange(row, 13).setValue(
       Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd HH:mm:ss')
     );
@@ -268,11 +328,14 @@ function handleCompleteSend(e, sheet, row) {
     return;
   }
 
-  var phone = String(rowData[2]).replace(/[^0-9]/g, ''); // C 연락처
-  var name  = String(rowData[1] || '').trim();           // B 이름
+  var phone      = String(rowData[2]).replace(/[^0-9]/g, ''); // C 연락처
+  var name       = String(rowData[1] || '').trim();           // B 이름
+  var product    = String(rowData[5] || '').trim();           // F 상품 (글로벌재구매/숏츠단건)
+  // 결과물 URL: 글로벌=유튜브, 숏츠=인스타(릴스) — 상품별 템플릿 분기
+  var templateId = product === '숏츠단건' ? TEMPLATE_COMPLETE_SHORTS : TEMPLATE_COMPLETE_GLOBAL;
 
   try {
-    sendAlimtalk(phone, TEMPLATE_COMPLETE, { '#{신청자}': name, '#{결과물}': resultUrl });
+    sendAlimtalk(phone, templateId, { '#{신청자}': name, '#{결과물}': resultUrl });
     sheet.getRange(row, 12).setValue(
       Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd HH:mm:ss')
     );
