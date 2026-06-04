@@ -137,6 +137,30 @@ const IconClock = ({ size = 24 }) => (
 // ── VARIANT A ─────────────────────────────────────────────────
 function VariantA() {
   const [tab, setTab] = React.useState('global');
+  const [demo, setDemo] = React.useState(false);
+  const segRef = React.useRef(null);
+  const touched = React.useRef(false);
+
+  // #4 토글이 화면에 '도착'하면 1회 자동 시연 → 전환 가능함을 알림
+  React.useEffect(() => {
+    const el = segRef.current;
+    if (!el) return;
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce) return;
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting && !touched.current) {
+          setDemo(true);
+          setTimeout(() => setDemo(false), 1700);
+          io.disconnect();
+        }
+      });
+    }, { threshold: 0.6 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  const selectTab = (t) => { touched.current = true; setDemo(false); setTab(t); };
 
   return (
     <div style={{ background: '#fff', minHeight: '100vh' }}>
@@ -341,11 +365,16 @@ function VariantA() {
 
           {/* 탭 컴포넌트 카드 (헤더=탭, 본문=콘텐츠) */}
           <div className="product-switch">
-            <div className="seg" role="tablist">
+            <div className={`seg ${demo ? 'is-demo' : ''}`} ref={segRef} role="tablist">
+              <span
+                className="seg-thumb"
+                data-pos={tab === 'shorts' ? 'r' : 'l'}
+                aria-hidden="true"
+              />
               <button
                 role="tab"
                 className={`seg-btn ${tab === 'global' ? 'is-on' : ''}`}
-                onClick={() => setTab('global')}
+                onClick={() => selectTab('global')}
               >
                 <span className="seg-ico"><IconGlobe size={26} /></span>
                 <span className="seg-name">빌리투어 글로벌</span>
@@ -354,7 +383,7 @@ function VariantA() {
               <button
                 role="tab"
                 className={`seg-btn ${tab === 'shorts' ? 'is-on' : ''}`}
-                onClick={() => setTab('shorts')}
+                onClick={() => selectTab('shorts')}
               >
                 <span className="seg-ico"><IconZap size={26} /></span>
                 <span className="seg-name">숏폼 패키지 <span className="seg-new">NEW</span></span>
@@ -670,6 +699,11 @@ function VariantA() {
           0%, 100% { transform: translateY(0); }
           50%      { transform: translateY(-5px); }
         }
+        @keyframes segDemo {
+          0%, 12%   { transform: translateX(0); }
+          44%, 56%  { transform: translateX(100%); }
+          88%, 100% { transform: translateX(0); }
+        }
         @keyframes floatIn {
           from { opacity: 0; transform: translateY(24px); }
           to   { opacity: 1; transform: translateY(0); }
@@ -732,45 +766,56 @@ function VariantA() {
           overflow: hidden;
         }
         .seg {
-          display: grid; grid-template-columns: 1fr 1fr; gap: 7px;
-          margin: 0; padding: 7px;
-          background: #D7E0EA;
-        }
-        .seg-btn {
+          --seg-pad: 10px;
           position: relative;
-          display: flex; flex-direction: column; align-items: center; gap: 10px;
-          padding: 23px 12px; border-radius: 15px; cursor: pointer;
-          transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+          display: grid; grid-template-columns: 1fr 1fr; gap: 0;
+          margin: 0; padding: var(--seg-pad);
+          background: #DCE4EE;
+          border-radius: 22px;
+          box-shadow: inset 0 2px 6px rgba(26,58,107,0.14);
+        }
+        /* 트랙 안에서 좌우로 미끄러지는 활성 표시 */
+        .seg-thumb {
+          position: absolute;
+          top: var(--seg-pad); bottom: var(--seg-pad); left: var(--seg-pad);
+          width: calc((100% - 2 * var(--seg-pad)) / 2);
+          border-radius: 15px;
+          background: linear-gradient(135deg, #1A3A6B, #2B85CC);
+          box-shadow: 0 10px 24px rgba(43,133,204,0.4);
+          transition: transform 0.36s cubic-bezier(0.34, 1.3, 0.5, 1);
+          z-index: 0;
+        }
+        .seg-thumb[data-pos="l"] { transform: translateX(0); }
+        .seg-thumb[data-pos="r"] { transform: translateX(100%); }
+        /* 화면 도착 시 1회 자동 시연 — 좌우로 미끄러져 전환 가능함을 알림 */
+        .seg.is-demo .seg-thumb { animation: segDemo 1.7s cubic-bezier(0.45, 0, 0.25, 1) both; }
+        .seg.is-demo .seg-name,
+        .seg.is-demo .seg-price,
+        .seg.is-demo .seg-ico { transition: none; }
+        .seg-btn {
+          position: relative; z-index: 1;
+          display: flex; flex-direction: column; align-items: center; gap: 8px;
+          padding: 18px 10px; border-radius: 15px; cursor: pointer;
+          background: transparent;
+          transition: color 0.25s ease;
         }
         .seg-ico {
-          width: 51px; height: 51px; border-radius: 14px;
+          width: 44px; height: 44px; border-radius: 13px;
           display: flex; align-items: center; justify-content: center;
-          transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+          transition: background 0.25s, color 0.25s;
         }
-        .seg-name { font-size: 21px; font-weight: 800; }
-        .seg-price { font-size: 15px; font-weight: 600; }
+        .seg-name { font-size: 20px; font-weight: 800; }
+        .seg-price { font-size: 14px; font-weight: 600; }
         .seg-new {
           font-size: 12px; font-weight: 800; color: #fff;
           background: #E8B84B; padding: 2px 8px; border-radius: 100px;
           vertical-align: middle; margin-left: 4px;
         }
-        /* 비선택 = 면 안으로 들어간(inset) 느낌 */
-        .seg-btn:not(.is-on) {
-          background: #D7E0EA;
-          box-shadow: inset 0 4px 9px rgba(26,58,107,0.22), inset 0 -1px 0 rgba(255,255,255,0.4);
-          transform: none;
-        }
-        .seg-btn:not(.is-on) .seg-name { color: #8995A4; }
-        .seg-btn:not(.is-on) .seg-price { color: #9AA6B4; }
-        .seg-btn:not(.is-on) .seg-ico { background: #C6D1DD; color: #9AA6B4; box-shadow: inset 0 2px 5px rgba(26,58,107,0.2); }
-        .seg-btn:not(.is-on):hover { background: #CDD8E3; }
-        /* 선택 = 면 밖으로 살짝 솟은(extrude) 버튼 */
-        .seg-btn.is-on {
-          background: linear-gradient(135deg, #1A3A6B, #2B85CC);
-          box-shadow: 0 12px 28px rgba(43,133,204,0.42);
-          transform: translateY(-3px) scale(1.02);
-          z-index: 1;
-        }
+        /* 비선택 */
+        .seg-btn:not(.is-on) .seg-name { color: #7A8694; }
+        .seg-btn:not(.is-on) .seg-price { color: #93A0AE; }
+        .seg-btn:not(.is-on) .seg-ico { background: #C6D1DD; color: #8995A4; }
+        /* 선택 = 미끄러져 온 thumb 위 */
         .seg-btn.is-on .seg-name,
         .seg-btn.is-on .seg-price { color: #fff; }
         .seg-btn.is-on .seg-ico { background: rgba(255,255,255,0.22); color: #fff; }
@@ -1102,9 +1147,11 @@ function VariantA() {
 
           .why-grid { grid-template-columns: 1fr !important; }
 
-          .seg { gap: 10px !important; padding: 12px !important; }
-          .seg-btn { padding: 18px 8px !important; }
-          .seg-name { font-size: 18px !important; }
+          .seg { --seg-pad: 7px !important; }
+          .seg-btn { padding: 15px 6px !important; gap: 6px !important; }
+          .seg-ico { width: 38px !important; height: 38px !important; }
+          .seg-name { font-size: 16px !important; }
+          .seg-price { font-size: 12px !important; }
           .prod-panel { padding: 32px 18px !important; }
 
           .panel-head h3 { font-size: 26px !important; }
@@ -1149,14 +1196,19 @@ function VariantA() {
           .embed-ig iframe { height: 660px !important; }
 
           /* 비교표 — 3컬럼 유지, 폭만 압축 */
-          .ct-row { grid-template-columns: 1.5fr 0.9fr 1.1fr !important; }
-          .ct-feat { font-size: 14px !important; padding-left: 14px !important; }
-          .ct-plan { font-size: 14px !important; }
+          .ct-row { grid-template-columns: 1.4fr 0.85fr 1.15fr !important; }
+          .ct-feat { font-size: 14px !important; padding-left: 14px !important; align-items: flex-start !important; word-break: keep-all !important; }
+          .ct-plan { font-size: 14px !important; word-break: keep-all !important; line-height: 1.25 !important; text-align: center !important; }
           .ct-plan-sub { display: none !important; }
           .ct-reco { font-size: 9px !important; padding: 2px 8px !important; }
-          .ct-price { font-size: 17px !important; }
-          .ct-cell { padding: 14px 6px !important; min-height: 54px !important; }
-          .ct-feat { align-items: flex-start !important; }
+          .ct-cell { padding: 14px 5px !important; min-height: 54px !important; }
+          /* 가격 행 — 세로 스택 + 줄바꿈 방지 */
+          .ct-price-old { font-size: 15px !important; white-space: nowrap !important; }
+          .ct-price-strike-old { font-size: 11px !important; white-space: nowrap !important; }
+          .ct-price-now { flex-direction: column !important; gap: 4px !important; align-items: center !important; }
+          .ct-price { font-size: 16px !important; white-space: nowrap !important; }
+          .ct-off { font-size: 10px !important; padding: 2px 7px !important; }
+          .ct-vat { font-size: 10px !important; }
 
           #change { padding: 72px 0 !important; }
           #products { padding: 72px 0 !important; }
@@ -1165,6 +1217,8 @@ function VariantA() {
           #cta { padding: 64px 0 !important; }
           .cta-inner { padding: 48px 24px !important; border-radius: 20px !important; }
           #cta h2 { font-size: 28px !important; }
+          /* 상시 플로팅 CTA가 최하단 footer를 가리지 않도록 여백 확보 */
+          footer { padding-bottom: 104px !important; }
         }
       `}</style>
     </div>

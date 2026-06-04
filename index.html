@@ -91,26 +91,16 @@
       position: absolute; opacity: 0; width: 0; height: 0;
     }
 
-    .product-card-header {
-      display: flex; align-items: flex-start; justify-content: space-between;
-      margin-bottom: 8px;
-    }
-
-    .product-tag {
-      font-size: 11px; font-weight: 700; color: #1A3A6B;
-      background: #E8EEF8; border-radius: 6px; padding: 2px 8px;
-      display: inline-block;
-    }
-    .product-card.selected .product-tag { background: #1A3A6B; color: #fff; }
-
-    .product-badge {
-      font-size: 11px; font-weight: 700; color: #E8B84B;
-      background: #FDF6E3; border-radius: 6px; padding: 2px 8px;
-    }
-
     .product-name {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+      padding-right: 34px;
       font-size: 16px; font-weight: 700; color: #1A202C; margin-bottom: 4px;
     }
+    .product-pill {
+      font-size: 11px; font-weight: 700; color: #1A3A6B;
+      background: #E8EEF8; border-radius: 6px; padding: 2px 8px;
+    }
+    .product-card.selected .product-pill { background: #1A3A6B; color: #fff; }
 
     .product-price-wrap { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
     .product-price { font-size: 22px; font-weight: 700; color: #1A3A6B; }
@@ -139,6 +129,54 @@
       transition: border-color 0.15s;
     }
     .product-card.selected .product-check::after { border-color: #fff; }
+
+    /* 유튜브 바로가기 링크 (보조 텍스트) */
+    .yt-shortcut {
+      font-size: 12px; font-weight: 500; color: #8B95A1;
+      text-decoration: none; white-space: nowrap;
+    }
+    .yt-shortcut:hover { color: #2B85CC; text-decoration: underline; }
+
+    /* 상품 예시 보기 — 재생 링크 */
+    .product-example-btn {
+      display: inline-flex; align-items: center; gap: 7px;
+      margin-top: 14px;
+      font-size: 13px; font-weight: 600; color: #2B85CC;
+      background: none; border: none; padding: 0; cursor: pointer;
+      font-family: inherit;
+    }
+    .product-example-btn .play-dot {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 19px; height: 19px; border-radius: 50%;
+      background: #2B85CC; color: #fff; font-size: 8px; padding-left: 1px;
+      flex-shrink: 0; transition: background 0.15s;
+    }
+    .product-example-btn .label { text-decoration: underline; text-underline-offset: 3px; }
+    .product-example-btn:hover { color: #1A6EB0; }
+    .product-example-btn:hover .play-dot { background: #1A6EB0; }
+
+    /* 상품 강조 배지 (무료) */
+    .product-free-banner {
+      display: flex; align-items: center; gap: 7px;
+      margin-top: 10px; padding: 9px 12px;
+      background: #FDF6E3; border: 1px solid #F0DCA0; border-radius: 9px;
+      font-size: 13px; font-weight: 700; color: #B8860B; line-height: 1.4;
+    }
+    .product-free-banner .free-pill {
+      font-size: 11px; font-weight: 800; color: #fff; background: #E8B84B;
+      padding: 2px 8px; border-radius: 100px; flex-shrink: 0;
+    }
+    /* 예시 모달 임베드 */
+    .example-yt {
+      position: relative; width: 100%; padding-top: 56.25%;
+      border-radius: 12px; overflow: hidden; background: #000;
+    }
+    .example-yt iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: none; }
+    .example-ig {
+      width: 100%; max-width: 320px; margin: 0 auto;
+      border-radius: 12px; overflow: hidden; background: #fff;
+    }
+    .example-ig iframe { width: 100%; height: 600px; border: none; display: block; }
 
     /* 동의 체크박스 */
     .agree-row {
@@ -405,7 +443,10 @@
           <input type="text" id="branchAddr" placeholder="도로명 주소를 입력해 주세요" autocomplete="off">
         </div>
         <div class="field">
-          <div class="field-label">유튜브 링크</div>
+          <div class="field-label" style="justify-content:space-between;">
+            <span>유튜브 링크</span>
+            <a href="https://www.youtube.com/@RoomTour" target="_blank" rel="noopener" class="yt-shortcut">빌리투어 유튜브 ↗</a>
+          </div>
           <input type="url" id="tourUrl" placeholder="https://youtu.be/..." autocomplete="off">
           <div class="feedback" id="fb-url"></div>
           <div id="ytPreview" class="yt-preview" style="display:none;"></div>
@@ -419,29 +460,32 @@
           <label class="product-card selected" id="card-A" for="product-A">
             <input type="radio" class="product-radio" id="product-A" name="product" value="A" checked>
             <div class="product-check"></div>
-            <div class="product-card-header">
-              <span class="product-tag">A. 글로벌 재구매</span>
-              <span class="product-badge">숏츠 무료 포함</span>
-            </div>
-            <div class="product-name">빌리투어 글로벌 재구매</div>
+            <div class="product-name">빌리투어 글로벌 재구매 <span class="product-pill">추천</span></div>
             <div class="product-price-wrap">
               <span class="product-price">40만원</span>
               <span class="product-price-orig">정가 50만원</span>
             </div>
-            <div class="product-desc">10만원 할인 + 숏츠 제작 무료 포함</div>
+            <div class="product-desc">촬영·편집·영어 자막/번역/썸네일·유튜브/고방 업로드</div>
+            <div class="product-free-banner">
+              <span class="free-pill">기간 한정</span>
+              <span>이벤트 혜택 — 숏츠 제작(10만원 상당) <strong>무료 제공</strong></span>
+            </div>
+            <button type="button" class="product-example-btn" data-example="A">
+              <span class="play-dot">▶</span><span class="label">예시 영상 보기</span>
+            </button>
           </label>
 
           <label class="product-card" id="card-B" for="product-B">
             <input type="radio" class="product-radio" id="product-B" name="product" value="B">
             <div class="product-check"></div>
-            <div class="product-card-header">
-              <span class="product-tag">B. 숏츠 단건</span>
-            </div>
-            <div class="product-name">숏츠 단건 선구매</div>
+            <div class="product-name">숏츠만 구매하기</div>
             <div class="product-price-wrap">
               <span class="product-price">10만원</span>
             </div>
-            <div class="product-desc">숏츠 영상 1건 단독 제작</div>
+            <div class="product-desc">추가 촬영 없이, 보유 중인 영상으로 숏츠 2개 제작</div>
+            <button type="button" class="product-example-btn" data-example="B">
+              <span class="play-dot">▶</span><span class="label">예시 영상 보기</span>
+            </button>
           </label>
 
         </div>
@@ -506,6 +550,18 @@
     <div class="modal-btns">
       <button class="btn-confirm" id="modalConfirm" disabled style="opacity:0.4;">동의하고 신청 완료</button>
       <button class="btn-cancel" id="modalCancel">돌아가기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 상품 예시 모달 -->
+<div class="modal-overlay" id="exampleModal">
+  <div class="modal-sheet">
+    <div class="modal-title" id="exampleTitle">상품 예시</div>
+    <div class="modal-desc" id="exampleDesc"></div>
+    <div id="exampleBody" style="margin-bottom:20px;"></div>
+    <div class="modal-btns">
+      <button class="btn-cancel" id="exampleClose">닫기</button>
     </div>
   </div>
 </div>
@@ -651,6 +707,44 @@
       var radio = this.querySelector('.product-radio');
       if (radio) radio.checked = true;
     });
+  });
+
+  // 상품 예시 모달
+  var EXAMPLE = {
+    A: {
+      title: '빌리투어 글로벌 영상 예시',
+      desc: '실제 제작된 글로벌 룸투어 영상입니다.',
+      html: '<div class="example-yt"><iframe src="https://www.youtube.com/embed/5PQ9bL13fyo" title="글로벌 예시" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div>'
+    },
+    B: {
+      title: '숏폼(숏츠) 예시',
+      desc: '기존 영상으로 제작한 실제 바이럴 릴스입니다.',
+      html: '<div class="example-ig"><iframe src="https://www.instagram.com/p/DYT__Gzve1L/embed" title="숏폼 예시" scrolling="no" allowtransparency="true"></iframe></div>'
+    }
+  };
+
+  document.querySelectorAll('.product-example-btn').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      var ex = EXAMPLE[this.getAttribute('data-example')];
+      if (!ex) return;
+      document.getElementById('exampleTitle').textContent = ex.title;
+      document.getElementById('exampleDesc').textContent = ex.desc;
+      document.getElementById('exampleBody').innerHTML = ex.html;
+      document.getElementById('exampleModal').classList.add('show');
+    });
+  });
+
+  document.getElementById('exampleClose').addEventListener('click', function() {
+    document.getElementById('exampleModal').classList.remove('show');
+    document.getElementById('exampleBody').innerHTML = '';
+  });
+  document.getElementById('exampleModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+      this.classList.remove('show');
+      document.getElementById('exampleBody').innerHTML = '';
+    }
   });
 
   function getSelectedProduct() {
