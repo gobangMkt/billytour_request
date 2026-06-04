@@ -415,11 +415,12 @@ function setupSheets() {
   // 설정 시트 기본값 (비어있을 때만)
   var s = ss.getSheetByName('설정');
   if (String(s.getRange(1, 1).getValue()).trim() === '') {
+    // A열은 라벨(표시용) — 코드는 행 위치와 B열 값만 읽으므로 한글 라벨 OK
     s.getRange(1, 1, 4, 2).setValues([
-      ['active', 'ON'],
-      ['startDate', ''],
-      ['endDate', ''],
-      ['notifyEmails', 'archoit94@neoflat.net']
+      ['활성화(ON/OFF)', 'ON'],
+      ['시작일', ''],
+      ['종료일', ''],
+      ['알림 이메일', 'archoit94@neoflat.net']
     ]);
   }
 
