@@ -19,11 +19,14 @@ var PAY_LINK_SHORTS = 'https://s.tosspayments.com/BnpMF-HA2If';  // 숏츠단건
 function getSettings() {
   var ss   = SpreadsheetApp.openById(SPREADSHEET_ID);
   var s    = ss.getSheetByName('설정');
-  var data = s.getRange(1, 1, 3, 2).getValues();
+  var data = s.getRange(1, 1, 4, 2).getValues();
   return {
     active:    String(data[0][1]).trim(),
     startDate: data[1][1] ? new Date(data[1][1]) : null,
-    endDate:   data[2][1] ? new Date(data[2][1]) : null
+    endDate:   data[2][1] ? new Date(data[2][1]) : null,
+    // 4행 B열: 알림 받을 이메일 (콤마/공백 구분, 여러 명 가능). 비면 기본값 사용
+    notifyEmails: String(data[3][1] || '')
+      .split(/[,\s]+/).filter(function(x){ return x; }).join(',')
   };
 }
 
@@ -145,7 +148,7 @@ function submitForm(formData) {
 
   // 신청 접수 이메일 알림
   try {
-    var NOTIFY_EMAIL = 'archoit94@neoflat.net';
+    var NOTIFY_EMAIL = getSettings().notifyEmails || 'archoit94@neoflat.net';
     var subject = '[빌리투어] 새 신청 접수 — ' + (formData.name || '') + ' / ' + productLabel;
     var body = [
       '새로운 빌리투어 신청이 접수됐어요.',
@@ -259,7 +262,7 @@ function handlePaymentComplete(e, sheet, row) {
     var tourUrl = String(rowData[6] || '');    // G 빌리투어URL
     var product = String(rowData[9] || '');    // J 상품선택
 
-    var NOTIFY_EMAIL = 'archoit94@neoflat.net';
+    var NOTIFY_EMAIL = getSettings().notifyEmails || 'archoit94@neoflat.net';
     var subject = '[빌리투어] 결제 완료 — ' + name + ' / ' + product;
     var body = [
       '결제가 완료 처리됐어요.',
@@ -412,10 +415,11 @@ function setupSheets() {
   // 설정 시트 기본값 (비어있을 때만)
   var s = ss.getSheetByName('설정');
   if (String(s.getRange(1, 1).getValue()).trim() === '') {
-    s.getRange(1, 1, 3, 2).setValues([
+    s.getRange(1, 1, 4, 2).setValues([
       ['active', 'ON'],
       ['startDate', ''],
-      ['endDate', '']
+      ['endDate', ''],
+      ['notifyEmails', 'archoit94@neoflat.net']
     ]);
   }
 
