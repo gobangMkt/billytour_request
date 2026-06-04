@@ -1,7 +1,7 @@
 /* global React */
 const { useState } = React;
 
-const CHANNEL_URL = 'https://u-ceo.channel.io/workflows/828761';
+const CHANNEL_URL = 'https://u-ceo.channel.io/workflows/835955';
 const REQUEST_URL = 'https://gobangmkt.github.io/billytour_request/';
 
 // ─────────────────────────────────────────────────────────────
