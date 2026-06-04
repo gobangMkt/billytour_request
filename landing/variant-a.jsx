@@ -436,8 +436,8 @@ function VariantA() {
                   { t: '영어 자동번역 노출', kind: 'global' },
                   { t: '영어 썸네일 제작', kind: 'global' },
                   { t: '10~15초 하이라이트 클립', kind: 'global' },
-                  { t: '트렌디한 숏폼 2개 제작', kind: 'free' },
-                  { t: '유튜브 Shorts·커뮤니티 + 인스타 Reels 업로드', kind: 'free' },
+                  { t: '트렌디한 숏폼 제작', kind: 'free' },
+                  { t: '유튜브 Shorts·커뮤니티 + 인스타 Reels 동시 업로드', kind: 'free' },
                 ].map((item, i) => (
                   <div key={i} className="hop-li">
                     <span style={{ flexShrink: 0 }}><IconCheck size={20} color={item.kind === 'base' ? '#2B85CC' : '#E8B84B'} /></span>
@@ -476,7 +476,7 @@ function VariantA() {
               아직 글로벌이 부담되신다면, <strong>숏폼부터 가볍게</strong> 시작하세요.
             </div>
             <div className="sub-offer-tags">
-              {['숏폼 2개 제작', '유튜브·인스타 업로드', '외국어 자막'].map((t, i) => (
+              {['숏폼 1개 제작', '유튜브·인스타 동시 업로드', '외국어 자막'].map((t, i) => (
                 <span key={i} className="sub-tag"><IconCheck size={16} color="#2B85CC" /> {t}</span>
               ))}
             </div>
@@ -561,7 +561,7 @@ function VariantA() {
               a="담당자가 영상 내용을 영어로 번역해 <strong>직접 검수하여 삽입</strong>합니다.<br />시설명·지역명 등 고유명사도 최대한 반영해요.<br />YouTube 영어 번역 설정으로 <strong>글로벌 검색에도 노출</strong>됩니다." />
             <FaqItem
               q="숏폼만 따로 신청할 수 있나요?"
-              a="네, <strong>숏폼만 따로 구매(10만원)</strong>도 가능합니다.<br />추가 촬영 없이 기존 영상으로 숏폼 2개를 제작해 유튜브·인스타에 올려드려요.<br /><br />다만 특별 이벤트 기간엔 <strong>글로벌(40만원)에 숏폼이 무료로 포함</strong>되니, 글로벌 신청이 훨씬 유리합니다." />
+              a="네, <strong>숏폼만 따로 구매(10만원)</strong>도 가능합니다.<br />추가 촬영 없이 기존 영상으로 숏폼 1개를 제작해 유튜브·인스타 두 곳에 올려드려요.<br /><br />다만 특별 이벤트 기간엔 <strong>글로벌(40만원)에 숏폼이 무료로 포함</strong>되니, 글로벌 신청이 훨씬 유리합니다." />
             <FaqItem
               q="촬영 일정은 어떻게 잡히나요?"
               a="결제 완료 후 담당자가 원장님 일정에 맞춰 촬영일을 조율합니다.<br />통상 결제 후 <strong>1~2주 내</strong> 촬영이 진행돼요." />
