@@ -5,12 +5,28 @@
 // 추출: 가격정보 URL, 대표번호
 // ============================================================
 
-const API_KEY = 'AIzaSyCQZRypZUkUTNp7B2t-G_1O5HG3B79FvsI';
+// API 키는 코드에 두지 않고 스크립트 속성(YOUTUBE_API_KEY)에서 읽는다.
+// 최초 1회 'API키_설정' 함수를 실행해 키를 등록할 것.
+const API_KEY = PropertiesService.getScriptProperties().getProperty('YOUTUBE_API_KEY');
 const CHANNEL_HANDLE = '@RoomTour.';
 const SHEET_NAME = '크롤링 결과';
 
 const PHONE_PATTERN = /(?:0507|0508|050\d|02|0[3-9]\d)-?\d{3,4}-?\d{4}/g;
 const URL_PATTERN = /https?:\/\/gobang\.kr\/place\/\d+/g;
+
+
+// ★ 최초 1회 실행: YouTube API 키를 스크립트 속성에 저장
+function API키_설정() {
+  const key = Browser.inputBox(
+    'YouTube API 키 등록',
+    'AIza... 형식의 키를 입력하세요',
+    Browser.Buttons.OK_CANCEL
+  );
+  if (key && key !== 'cancel') {
+    PropertiesService.getScriptProperties().setProperty('YOUTUBE_API_KEY', key.trim());
+    Browser.msgBox('API 키 저장 완료. 이제 설치_및_즉시실행 또는 run 을 실행하세요.');
+  }
+}
 
 
 // ★ 최초 1회만 실행: 매일 오전 6시 자동 동기화 트리거 등록 + 즉시 1회 실행
@@ -40,6 +56,10 @@ function 전체_초기화후_재수집() {
 
 // ---- 메인: 채널 전체와 시트를 동기화 (없는 영상만 추가) ----
 function run() {
+  if (!API_KEY) {
+    Browser.msgBox('API 키가 없습니다. 먼저 API키_설정 함수를 실행해 키를 등록하세요.');
+    return;
+  }
   const sheet = getOrCreateSheet(SHEET_NAME);
   if (sheet.getLastRow() < 1 || sheet.getRange(1, 1).getValue() !== '영상 제목') {
     setupHeader(sheet);
