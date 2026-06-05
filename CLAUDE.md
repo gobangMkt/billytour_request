@@ -32,8 +32,13 @@ landing/
 assets/
   U_ALF.png         U사장님 로고
 gas-code/
-  Code.gs           Google Apps Script 백엔드
+  Code.gs           Google Apps Script 백엔드 (신청폼 1VeaQ… 시트 바인딩)
+gas-crawler/
+  Code.js           유튜브 크롤링 GAS (@RoomTour 영상→지점 URL 매핑 시트 생성, 1VVF9… 시트)
+  README.md         크롤러 설명
 ```
+
+> `gas-code`와 `gas-crawler`는 **서로 다른 스프레드시트에 바인딩된 별개 GAS**다. 각 폴더에서 따로 `clasp push`/`clasp deploy` 한다.
 
 ---
 
@@ -108,6 +113,25 @@ var GAS_URL = 'https://script.google.com/macros/s/AKfycbw8gsvLxZ2QEo4TMfMocWkTTy
 |--------|------|
 | `checkAccess` | 이벤트 활성 여부 확인 |
 | `submitForm` | 신청 데이터 구글 시트 저장 (신청 내역 + 작업 내역 동시 기록) |
+| `ytInfo` | 유튜브 oEmbed 영상 정보 (예비) |
+| `resolvePlace` | **빌리투어 URL → 지점 자동 검증** (아래 흐름 참조) |
+
+### 지점 자동 검증 (`resolvePlace`)
+
+신청폼에서 빌리투어 영상 링크를 입력하면 지점 URL·지점명·주소를 자동으로 찾아 검증한다.
+
+```
+유튜브 URL → extractVideoId
+  ① 크롤링 시트(1VVF9…, gas-crawler가 생성) 에서 영상ID로 지점 URL lookup  ← 1순위
+  ② 시트에 없으면 YouTube Data API(videos.list)로 설명란에서 place URL 추출  ← 폴백
+  → fetchPlaceInfo(고방 페이지 스크래핑): 지점명·주소·썸네일·도보
+  → 프론트 지점 카드 표시 + 지점명·주소 자동채움(수정 가능)
+```
+
+- **지점명**: 고방 페이지 JSON `"title"` 첫 ` - ` 앞 (폴백 og:title)
+- **주소**: `"addrFullBunji"` / **썸네일**: og:image / **도보**: og:description
+- **폴백 키**: 시트에 없는 최신 영상까지 처리하려면 GAS Script Property `YT_API_KEY` 등록 필요. 미설정 시 시트에 있는 영상만 동작.
+- **크롤링 시트 권한**: GAS 실행 계정이 `1VVF9…` 시트에 접근 가능해야 함(공유/소유).
 
 ---
 
