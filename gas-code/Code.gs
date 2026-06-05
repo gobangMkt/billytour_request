@@ -223,20 +223,26 @@ function resolvePlace(url) {
   if (!videoId) return { ok: false, reason: 'invalid_url' };
 
   var placeUrl = '', ytTitle = '', phone = '', source = '';
+  var branchName = '', branchAddr = '', thumbnail = '', walking = '';
+  var cs = null, hitRow = -1;
 
-  // 1) 크롤링 시트 lookup (C=영상ID, A=영상제목, E=place URL, F=대표번호)
+  // 1) 크롤링 시트 lookup
+  //    C=영상ID, A=영상제목, E=place URL, F=대표번호, G=지점명, H=주소, I=썸네일, J=도보
   try {
-    var cs = SpreadsheetApp.openById(CRAWL_SHEET_ID).getSheetByName(CRAWL_TAB);
-    if (cs && cs.getLastRow() > 1) {
-      var rows = cs.getRange(2, 1, cs.getLastRow() - 1, 6).getValues();
-      for (var i = 0; i < rows.length; i++) {
-        if (String(rows[i][2]).trim() === videoId) {
-          ytTitle  = String(rows[i][0] || '').trim();
-          placeUrl = String(rows[i][4] || '').trim();
-          phone    = String(rows[i][5] || '').trim();
-          source   = 'sheet';
-          break;
-        }
+    cs = SpreadsheetApp.openById(CRAWL_SHEET_ID).getSheetByName(CRAWL_TAB);
+    if (cs) {
+      var found = cs.createTextFinder(videoId).matchEntireCell(true).findNext();
+      if (found && found.getColumn() === 3) {  // C열(영상ID)만 정확 일치
+        hitRow = found.getRow();
+        var v = cs.getRange(hitRow, 1, 1, 10).getValues()[0];
+        ytTitle    = String(v[0] || '').trim();
+        placeUrl   = String(v[4] || '').trim();
+        phone      = String(v[5] || '').trim();
+        branchName = String(v[6] || '').trim();  // G
+        branchAddr = String(v[7] || '').trim();  // H
+        thumbnail  = String(v[8] || '').trim();  // I
+        walking    = String(v[9] || '').trim();  // J
+        source     = 'sheet';
       }
     }
   } catch (err) {
@@ -255,18 +261,37 @@ function resolvePlace(url) {
 
   if (!placeUrl) return { ok: false, reason: 'no_place', ytTitle: ytTitle };
 
-  // 3) 지점 상세 스크래핑
-  var info = fetchPlaceInfo(placeUrl);
+  // 3) 지점 상세 — 시트에 지점명·주소가 이미 있으면 스크래핑 생략(빠른 경로)
+  if (!branchName || !branchAddr) {
+    var info = fetchPlaceInfo(placeUrl);
+    branchName = branchName || info.branchName;
+    branchAddr = branchAddr || info.branchAddr;
+    thumbnail  = thumbnail  || info.thumbnail;
+    walking    = walking    || info.walking;
+
+    // 시트 행이 있으면 G~J에 캐싱(lazy backfill) → 다음 조회부터 즉시
+    if (cs && hitRow > 0) {
+      try {
+        if (String(cs.getRange(1, 7).getValue()).trim() === '') {
+          cs.getRange(1, 7, 1, 4).setValues([['지점명', '주소', '썸네일', '도보']]);
+        }
+        cs.getRange(hitRow, 7, 1, 4).setValues([[branchName, branchAddr, thumbnail, walking]]);
+      } catch (e) {
+        Logger.log('시트 백필 실패: ' + e);
+      }
+    }
+  }
+
   return {
     ok:         true,
     source:     source,
     placeUrl:   placeUrl,
     ytTitle:    ytTitle,
     phone:      phone,
-    branchName: info.branchName || '',
-    branchAddr: info.branchAddr || '',
-    thumbnail:  info.thumbnail  || '',
-    walking:    info.walking    || ''
+    branchName: branchName || '',
+    branchAddr: branchAddr || '',
+    thumbnail:  thumbnail  || '',
+    walking:    walking    || ''
   };
 }
 
