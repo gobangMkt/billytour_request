@@ -9,6 +9,11 @@ var TEMPLATE_COMPLETE_SHORTS = 'KA01TP260604101954648epByHA94rV6';  // 빌리투
 var PAY_LINK_GLOBAL = 'https://s.tosspayments.com/BnpMF3uoUf7';  // 글로벌재구매 (440,000)
 var PAY_LINK_SHORTS = 'https://s.tosspayments.com/BnpMF-HA2If';  // 숏츠단건 (110,000)
 
+// 유튜브 크롤링 결과 시트 (영상↔지점 URL 매핑) — 영상ID로 lookup
+var CRAWL_SHEET_ID = '1VVF9eztv8DwyEgxrf92KhtKmZilXrZSJNFhKRepbUQ4';
+var CRAWL_TAB      = '크롤링 결과';
+// YouTube Data API 키는 Script Property 'YT_API_KEY' 로 저장 (시트 미스 시 폴백용)
+
 /* ───────────────────────────────────────────
    설정 시트 읽기
    A열: 키, B열: 값
@@ -188,6 +193,138 @@ function getYoutubeInfo(url) {
     };
   } catch (err) {
     return { ok: false };
+  }
+}
+
+/* ───────────────────────────────────────────
+   유튜브 URL → 영상ID 추출
+   youtu.be/ID, watch?v=ID, /shorts/ID, /embed/ID 모두 처리
+─────────────────────────────────────────── */
+function extractVideoId(url) {
+  if (!url) return '';
+  var s = String(url).trim();
+  var m;
+  m = s.match(/[?&]v=([A-Za-z0-9_-]{11})/);    if (m) return m[1];
+  m = s.match(/youtu\.be\/([A-Za-z0-9_-]{11})/); if (m) return m[1];
+  m = s.match(/\/shorts\/([A-Za-z0-9_-]{11})/);  if (m) return m[1];
+  m = s.match(/\/embed\/([A-Za-z0-9_-]{11})/);   if (m) return m[1];
+  m = s.match(/([A-Za-z0-9_-]{11})/);            if (m) return m[1];
+  return '';
+}
+
+/* ───────────────────────────────────────────
+   유튜브 URL → 지점 정보 해석 (메인 엔드포인트)
+   1) 크롤링 시트에서 영상ID로 place URL lookup
+   2) 없으면 YouTube Data API로 설명란 파싱 (폴백)
+   3) place URL → 고방 페이지 스크래핑으로 지점명·주소·썸네일
+─────────────────────────────────────────── */
+function resolvePlace(url) {
+  var videoId = extractVideoId(url);
+  if (!videoId) return { ok: false, reason: 'invalid_url' };
+
+  var placeUrl = '', ytTitle = '', phone = '', source = '';
+
+  // 1) 크롤링 시트 lookup (C=영상ID, A=영상제목, E=place URL, F=대표번호)
+  try {
+    var cs = SpreadsheetApp.openById(CRAWL_SHEET_ID).getSheetByName(CRAWL_TAB);
+    if (cs && cs.getLastRow() > 1) {
+      var rows = cs.getRange(2, 1, cs.getLastRow() - 1, 6).getValues();
+      for (var i = 0; i < rows.length; i++) {
+        if (String(rows[i][2]).trim() === videoId) {
+          ytTitle  = String(rows[i][0] || '').trim();
+          placeUrl = String(rows[i][4] || '').trim();
+          phone    = String(rows[i][5] || '').trim();
+          source   = 'sheet';
+          break;
+        }
+      }
+    }
+  } catch (err) {
+    Logger.log('크롤링 시트 조회 실패: ' + err);
+  }
+
+  // 2) 폴백: YouTube Data API → 설명란에서 place URL 추출
+  if (!placeUrl) {
+    var api = fetchVideoSnippet(videoId);
+    if (api.ok) {
+      ytTitle = api.title || ytTitle;
+      var pm = String(api.description || '').match(/https?:\/\/gobang\.kr\/place\/\d+/);
+      if (pm) { placeUrl = pm[0]; source = 'api'; }
+    }
+  }
+
+  if (!placeUrl) return { ok: false, reason: 'no_place', ytTitle: ytTitle };
+
+  // 3) 지점 상세 스크래핑
+  var info = fetchPlaceInfo(placeUrl);
+  return {
+    ok:         true,
+    source:     source,
+    placeUrl:   placeUrl,
+    ytTitle:    ytTitle,
+    phone:      phone,
+    branchName: info.branchName || '',
+    branchAddr: info.branchAddr || '',
+    thumbnail:  info.thumbnail  || '',
+    walking:    info.walking    || ''
+  };
+}
+
+/* YouTube Data API videos.list → 제목·설명란 */
+function fetchVideoSnippet(videoId) {
+  try {
+    var key = PropertiesService.getScriptProperties().getProperty('YT_API_KEY');
+    if (!key) return { ok: false };
+    var url = 'https://www.googleapis.com/youtube/v3/videos?part=snippet&id=' + videoId + '&key=' + key;
+    var res = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
+    if (res.getResponseCode() !== 200) return { ok: false };
+    var d = JSON.parse(res.getContentText());
+    if (!d.items || !d.items.length) return { ok: false };
+    var sn = d.items[0].snippet;
+    return { ok: true, title: sn.title || '', description: sn.description || '' };
+  } catch (err) {
+    return { ok: false };
+  }
+}
+
+/* 고방 place 페이지 → 지점명·주소·썸네일·도보정보 (Mozilla UA 스크래핑) */
+function fetchPlaceInfo(placeUrl) {
+  var out = { branchName: '', branchAddr: '', thumbnail: '', walking: '' };
+  try {
+    var res = UrlFetchApp.fetch(placeUrl, {
+      muteHttpExceptions: true,
+      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
+    });
+    if (res.getResponseCode() !== 200) return out;
+    var html = res.getContentText('UTF-8');
+
+    // 주소: Next.js 데이터의 addrFullBunji (가장 안정적)
+    var am = html.match(/"addrFullBunji"\s*:\s*"([^"]+)"/);
+    if (am) out.branchAddr = am[1];
+
+    // 지점명: JSON title의 첫 " - " 앞 → 폴백 og:title 마지막 " - " 뒤
+    var tm = html.match(/"title"\s*:\s*"([^"]+?)\s*-\s*[^"]*"/);
+    if (tm) {
+      out.branchName = tm[1].trim();
+    } else {
+      var ogt = html.match(/<meta\s+property="og:title"\s+content="([^"]+)"/i);
+      if (ogt) {
+        var parts = ogt[1].split(' - ');
+        out.branchName = parts[parts.length - 1].trim();
+      }
+    }
+
+    // 썸네일
+    var im = html.match(/<meta\s+property="og:image"\s+content="([^"]+)"/i);
+    if (im) out.thumbnail = im[1];
+
+    // 도보정보 (og:description, 예: "갈산역 도보 1분 (갈산동)")
+    var dm = html.match(/<meta\s+property="og:description"\s+content="([^"]+)"/i);
+    if (dm) out.walking = dm[1];
+
+    return out;
+  } catch (err) {
+    return out;
   }
 }
 
@@ -496,6 +633,8 @@ function doPost(e) {
       result = submitForm(payload);
     } else if (action === 'ytInfo') {
       result = getYoutubeInfo(payload.url);
+    } else if (action === 'resolvePlace') {
+      result = resolvePlace(payload.url);
     } else {
       result = { error: 'Unknown action: ' + action };
     }

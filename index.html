@@ -227,6 +227,30 @@
       background: #F8FAFC; border-color: #E5E8EB;
     }
 
+    /* 지점 자동 검증 카드 */
+    .place-card {
+      margin-top: 10px; display: flex; gap: 12px; align-items: flex-start;
+      background: #F0F4FA; border: 1.5px solid #A4CCE8; border-radius: 12px; padding: 12px;
+    }
+    .place-card img {
+      width: 92px; height: 92px; object-fit: cover; border-radius: 8px; flex-shrink: 0;
+    }
+    .place-meta { min-width: 0; flex: 1; }
+    .place-name {
+      font-size: 15px; font-weight: 700; color: #1A3A6B; line-height: 1.4;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .place-addr { font-size: 13px; color: #4A5568; margin-top: 3px; word-break: keep-all; }
+    .place-sub  { font-size: 12px; color: #2B85CC; margin-top: 4px; font-weight: 600; }
+    .place-yt {
+      font-size: 12px; color: #8B95A1; margin-top: 6px;
+      display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .place-confirm {
+      font-size: 12px; color: #1A3A6B; font-weight: 700; margin-top: 8px;
+      padding-top: 8px; border-top: 1px dashed #A4CCE8;
+    }
+
     .notice-card {
       background: #F8FAFF;
       border: 1.5px solid #A4CCE8;
@@ -435,21 +459,21 @@
       <div class="section">
         <div class="section-title">지점 정보</div>
         <div class="field">
-          <div class="field-label">지점명</div>
-          <input type="text" id="branchName" placeholder="예) 신촌점 / ○○하우스" autocomplete="off">
-        </div>
-        <div class="field">
-          <div class="field-label">지점 주소</div>
-          <input type="text" id="branchAddr" placeholder="도로명 주소를 입력해 주세요" autocomplete="off">
-        </div>
-        <div class="field">
           <div class="field-label" style="justify-content:space-between;">
-            <span>유튜브 링크</span>
+            <span>빌리투어 영상 링크</span>
             <a href="https://www.youtube.com/@RoomTour" target="_blank" rel="noopener" class="yt-shortcut">빌리투어 유튜브 ↗</a>
           </div>
           <input type="url" id="tourUrl" placeholder="https://youtu.be/..." autocomplete="off">
           <div class="feedback" id="fb-url"></div>
           <div id="ytPreview" class="yt-preview" style="display:none;"></div>
+        </div>
+        <div class="field">
+          <div class="field-label">지점명</div>
+          <input type="text" id="branchName" placeholder="영상 링크 입력 시 자동으로 채워져요" autocomplete="off">
+        </div>
+        <div class="field">
+          <div class="field-label">지점 주소</div>
+          <input type="text" id="branchAddr" placeholder="영상 링크 입력 시 자동으로 채워져요" autocomplete="off">
         </div>
       </div>
 
@@ -628,50 +652,75 @@
     return /youtu\.be\//.test(val) || /youtube\.com\//.test(val);
   }
 
-  // 유튜브 영상 정보 자동 불러오기 (oEmbed)
-  var ytTimer = null;
-  var ytInfo = { title: '', channel: '', thumbnail: '' };
-
   function escapeHtml(s) {
     return String(s).replace(/[&<>"']/g, function(c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
     });
   }
 
-  function clearYtPreview() {
-    ytInfo = { title: '', channel: '', thumbnail: '' };
+  // 빌리투어 영상 → 지점 자동 검증
+  var ytTimer = null;
+  var placeInfo = { ytTitle: '', branchName: '', branchAddr: '', thumbnail: '', phone: '', placeUrl: '', walking: '' };
+
+  function emptyPlace() {
+    return { ytTitle: '', branchName: '', branchAddr: '', thumbnail: '', phone: '', placeUrl: '', walking: '' };
+  }
+
+  function clearPlacePreview() {
+    placeInfo = emptyPlace();
     var p = document.getElementById('ytPreview');
     p.style.display = 'none'; p.className = 'yt-preview'; p.innerHTML = '';
   }
 
-  function showYtNote(msg) {
+  function showPlaceNote(msg) {
     var p = document.getElementById('ytPreview');
     p.className = 'yt-preview note'; p.style.display = 'flex'; p.textContent = msg;
   }
 
-  function loadYtInfo(url) {
-    callAPI('ytInfo', { url: url })
+  function renderPlaceCard() {
+    var p = document.getElementById('ytPreview');
+    p.className = 'place-card'; p.style.display = 'flex';
+    var sub = [];
+    if (placeInfo.walking) sub.push(escapeHtml(placeInfo.walking));
+    if (placeInfo.phone)   sub.push(escapeHtml(placeInfo.phone));
+    p.innerHTML =
+      (placeInfo.thumbnail ? '<img src="' + placeInfo.thumbnail + '" alt="">' : '') +
+      '<div class="place-meta">' +
+        '<div class="place-name">' + escapeHtml(placeInfo.branchName || '(지점명 미확인)') + '</div>' +
+        (placeInfo.branchAddr ? '<div class="place-addr">' + escapeHtml(placeInfo.branchAddr) + '</div>' : '') +
+        (sub.length ? '<div class="place-sub">' + sub.join(' · ') + '</div>' : '') +
+        (placeInfo.ytTitle ? '<div class="place-yt">🎬 ' + escapeHtml(placeInfo.ytTitle) + '</div>' : '') +
+        '<div class="place-confirm">이 지점이 맞는지 확인해 주세요</div>' +
+      '</div>';
+  }
+
+  function loadPlaceInfo(url) {
+    callAPI('resolvePlace', { url: url })
       .then(function(d) {
         if (!d || !d.ok) {
-          ytInfo = { title: '', channel: '', thumbnail: '' };
-          showYtNote('영상 정보를 불러오지 못했어요. 링크는 그대로 접수됩니다.');
+          placeInfo = emptyPlace();
+          if (d && d.ytTitle) placeInfo.ytTitle = d.ytTitle;
+          showPlaceNote('지점을 자동으로 찾지 못했어요. 지점명·주소를 직접 입력해 주세요.');
           return;
         }
-        ytInfo = { title: d.title || '', channel: d.channel || '', thumbnail: d.thumbnail || '' };
-        var p = document.getElementById('ytPreview');
-        p.className = 'yt-preview'; p.style.display = 'flex';
-        p.innerHTML =
-          (ytInfo.thumbnail ? '<img src="' + ytInfo.thumbnail + '" alt="">' : '') +
-          '<div class="yt-meta">' +
-          '<div class="yt-title">' + escapeHtml(ytInfo.title) + '</div>' +
-          '<div class="yt-channel">' + escapeHtml(ytInfo.channel) + '</div></div>';
-        // 지점명이 비어 있으면 영상 제목으로 자동 채움 (수정 가능)
-        var bn = document.getElementById('branchName');
-        if (!bn.value.trim() && ytInfo.title) { bn.value = ytInfo.title; checkSubmit(); }
+        placeInfo = {
+          ytTitle:    d.ytTitle    || '',
+          branchName: d.branchName || '',
+          branchAddr: d.branchAddr || '',
+          thumbnail:  d.thumbnail  || '',
+          phone:      d.phone      || '',
+          placeUrl:   d.placeUrl   || '',
+          walking:    d.walking    || ''
+        };
+        renderPlaceCard();
+        // 지점명·주소 자동 채움 (수정 가능)
+        if (placeInfo.branchName) document.getElementById('branchName').value = placeInfo.branchName;
+        if (placeInfo.branchAddr) document.getElementById('branchAddr').value = placeInfo.branchAddr;
+        checkSubmit();
       })
       .catch(function() {
-        ytInfo = { title: '', channel: '', thumbnail: '' };
-        showYtNote('영상 정보를 불러오지 못했어요. 링크는 그대로 접수됩니다.');
+        placeInfo = emptyPlace();
+        showPlaceNote('지점 정보를 불러오지 못했어요. 지점명·주소를 직접 입력해 주세요.');
       });
   }
 
@@ -679,14 +728,14 @@
     var val = this.value.trim();
     clearTimeout(ytTimer);
     if (val.length === 0) {
-      this.className = ''; setFeedback('url', '', ''); clearYtPreview();
+      this.className = ''; setFeedback('url', '', ''); clearPlacePreview();
     } else if (isYoutubeUrl(val)) {
       this.className = 'valid'; setFeedback('url', 'ok', '올바른 유튜브 링크예요');
-      showYtNote('영상 정보를 불러오는 중...');
-      ytTimer = setTimeout(function() { loadYtInfo(val); }, 500);
+      showPlaceNote('지점 정보를 불러오는 중...');
+      ytTimer = setTimeout(function() { loadPlaceInfo(val); }, 500);
     } else {
       this.className = 'invalid'; setFeedback('url', 'error', 'youtu.be 또는 youtube.com 링크를 입력해 주세요');
-      clearYtPreview();
+      clearPlacePreview();
     }
     checkSubmit();
   });
@@ -842,8 +891,9 @@
       branchName: document.getElementById('branchName').value.trim(),
       branchAddr: document.getElementById('branchAddr').value.trim(),
       tourUrl: document.getElementById('tourUrl').value.trim(),
-      ytTitle: ytInfo.title,
-      ytChannel: ytInfo.channel,
+      ytTitle: placeInfo.ytTitle,
+      ytChannel: '',
+      placeUrl: placeInfo.placeUrl,
       product: getSelectedProduct(),
       memo: document.getElementById('memo').value.trim()
     }).then(function(result) {
