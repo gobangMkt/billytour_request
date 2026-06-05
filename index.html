@@ -241,6 +241,11 @@
       display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
     }
     .place-addr { font-size: 13px; color: #4A5568; margin-top: 3px; word-break: keep-all; }
+    .place-link {
+      display: inline-block; font-size: 12px; color: #2B85CC; margin-top: 5px;
+      text-decoration: none; word-break: break-all;
+    }
+    .place-link:hover { text-decoration: underline; }
     .place-sub  { font-size: 12px; color: #2B85CC; margin-top: 4px; font-weight: 600; }
     .place-yt {
       font-size: 12px; color: #8B95A1; margin-top: 6px;
@@ -688,6 +693,7 @@
       '<div class="place-meta">' +
         '<div class="place-name">' + escapeHtml(placeInfo.branchName || '(지점명 미확인)') + '</div>' +
         (placeInfo.branchAddr ? '<div class="place-addr">' + escapeHtml(placeInfo.branchAddr) + '</div>' : '') +
+        (placeInfo.placeUrl ? '<a class="place-link" href="' + escapeHtml(placeInfo.placeUrl) + '" target="_blank" rel="noopener">🔗 ' + escapeHtml(placeInfo.placeUrl) + '</a>' : '') +
         (sub.length ? '<div class="place-sub">' + sub.join(' · ') + '</div>' : '') +
         (placeInfo.ytTitle ? '<div class="place-yt">🎬 ' + escapeHtml(placeInfo.ytTitle) + '</div>' : '') +
         '<div class="place-confirm">이 지점이 맞는지 확인해 주세요</div>' +
