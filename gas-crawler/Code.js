@@ -64,6 +64,7 @@ function run() {
   if (sheet.getLastRow() < 1 || sheet.getRange(1, 1).getValue() !== '영상 제목') {
     setupHeader(sheet);
   }
+  ensurePlaceHeader(sheet);
 
   const uploadsId = getUploadsPlaylistId(CHANNEL_HANDLE);
   if (!uploadsId) {
@@ -93,13 +94,19 @@ function run() {
 
       const maxRows = Math.max(priceUrls.length, phones.length, 1);
       for (let j = 0; j < maxRows; j++) {
+        const pu = priceUrls[j] || '';
+        const info = pu ? fetchPlaceInfo(pu) : { branchName: '', branchAddr: '', thumbnail: '', walking: '' };
         newRows.push([
           v.snippet.title,
           v.snippet.publishedAt.slice(0, 10),
           v.id,
           `https://youtu.be/${v.id}`,
-          priceUrls[j] || '',
+          pu,
           phones[j] || '',
+          info.branchName,
+          info.branchAddr,
+          info.thumbnail,
+          info.walking,
         ]);
       }
     }
@@ -108,7 +115,7 @@ function run() {
 
   // 5) 시트 맨 아래에 추가
   if (newRows.length > 0) {
-    sheet.getRange(sheet.getLastRow() + 1, 1, newRows.length, 6).setValues(newRows);
+    sheet.getRange(sheet.getLastRow() + 1, 1, newRows.length, 10).setValues(newRows);
   }
 
   const msg = `채널 ${allVideoIds.length}개 점검 / 신규 ${newRows.length}행 추가`;
@@ -207,11 +214,87 @@ function getOrCreateSheet(name) {
 }
 
 function setupHeader(sheet) {
-  const headers = ['영상 제목', '업로드일', '영상 ID', '영상 링크', '가격정보 URL', '대표번호'];
+  const headers = ['영상 제목', '업로드일', '영상 ID', '영상 링크', '가격정보 URL', '대표번호',
+                   '지점명', '주소', '썸네일', '도보'];
   sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
   sheet.getRange(1, 1, 1, headers.length)
     .setFontWeight('bold')
     .setBackground('#4a86e8')
     .setFontColor('#ffffff');
   sheet.setFrozenRows(1);
+}
+
+// 기존 6열 헤더에 지점정보 열(G~J) 보강
+function ensurePlaceHeader(sheet) {
+  if (String(sheet.getRange(1, 7).getValue()).trim() === '') {
+    sheet.getRange(1, 7, 1, 4).setValues([['지점명', '주소', '썸네일', '도보']])
+      .setFontWeight('bold').setBackground('#4a86e8').setFontColor('#ffffff');
+  }
+}
+
+// ---- 고방 place 페이지 → 지점명·주소·썸네일·도보 ----
+function fetchPlaceInfo(placeUrl) {
+  const out = { branchName: '', branchAddr: '', thumbnail: '', walking: '' };
+  if (!placeUrl) return out;
+  try {
+    const res = UrlFetchApp.fetch(placeUrl, {
+      muteHttpExceptions: true,
+      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
+    });
+    if (res.getResponseCode() !== 200) return out;
+    const html = res.getContentText('UTF-8');
+
+    const am = html.match(/"addrFullBunji"\s*:\s*"([^"]+)"/);
+    if (am) out.branchAddr = am[1];
+
+    const tm = html.match(/"title"\s*:\s*"([^"]+?)\s*-\s*[^"]*"/);
+    if (tm) {
+      out.branchName = tm[1].trim();
+    } else {
+      const ogt = html.match(/<meta\s+property="og:title"\s+content="([^"]+)"/i);
+      if (ogt) { const parts = ogt[1].split(' - '); out.branchName = parts[parts.length - 1].trim(); }
+    }
+
+    const im = html.match(/<meta\s+property="og:image"\s+content="([^"]+)"/i);
+    if (im) out.thumbnail = im[1];
+
+    const dm = html.match(/<meta\s+property="og:description"\s+content="([^"]+)"/i);
+    if (dm) out.walking = dm[1];
+
+    return out;
+  } catch (err) {
+    return out;
+  }
+}
+
+// ★ 기존 행 일괄 백필: G(지점명)이 비어 있고 placeUrl 있는 행을 고방서 긁어 채움
+//   GAS 6분 제한 회피 — 5분 넘으면 중단. 다시 실행하면 이어서 처리(완료분은 건너뜀).
+function 지점정보_백필() {
+  const sheet = getOrCreateSheet(SHEET_NAME);
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) { Browser.msgBox('데이터가 없습니다.'); return; }
+  ensurePlaceHeader(sheet);
+
+  const vals = sheet.getRange(2, 1, lastRow - 1, 10).getValues();
+  const start = Date.now();
+  let done = 0, remain = 0;
+
+  for (let i = 0; i < vals.length; i++) {
+    const placeUrl = String(vals[i][4] || '').trim();  // E
+    const name     = String(vals[i][6] || '').trim();  // G
+    if (!placeUrl || name) continue;                   // 이미 채웠거나 URL 없으면 skip
+
+    if (Date.now() - start > 300000) { remain++; continue; }  // 5분 초과 → 다음 실행으로
+
+    const info = fetchPlaceInfo(placeUrl);
+    sheet.getRange(i + 2, 7, 1, 4).setValues([[info.branchName, info.branchAddr, info.thumbnail, info.walking]]);
+    done++;
+    Utilities.sleep(80);
+  }
+
+  const msg = remain > 0
+    ? `${done}행 채움 / 시간 초과로 ${remain}행 남음 — '지점정보_백필' 다시 실행하세요`
+    : `${done}행 채움 / 백필 완료`;
+  SpreadsheetApp.getActiveSpreadsheet().toast(msg, '지점정보 백필', 8);
+  Logger.log(msg);
 }
