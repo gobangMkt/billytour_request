@@ -1302,7 +1302,7 @@ function GlobalPanel() {
         <div className="prod-embed-label"><IconYoutube size={20} /> 실제 빌리투어 글로벌 영상</div>
         <div className="embed-yt">
           <iframe
-            src="https://www.youtube.com/embed/5PQ9bL13fyo"
+            src="https://www.youtube.com/embed/nl4vO4i_dK4"
             title="빌리투어 글로벌 미리보기"
             frameBorder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
