@@ -26,10 +26,9 @@ const IconVideo = ({ size = 24 }) => (
 );
 const IconSubtitle = ({ size = 24 }) => (
   <svg width={size} height={size} viewBox="0 0 20 20" fill="none" aria-hidden="true">
-    <rect x="1" y="3" width="18" height="14" rx="3" fill="currentColor"/>
-    <rect x="3" y="6" width="14" height="2" rx="1" fill="#fff"/>
-    <rect x="3" y="9.5" width="9.5" height="2" rx="1" fill="#fff"/>
-    <rect x="3" y="13" width="6.5" height="2" rx="1" fill="#fff"/>
+    <rect x="1" y="4" width="18" height="12" rx="3" fill="currentColor"/>
+    <rect x="3.6" y="8.4" width="5.4" height="3.2" rx="1.6" fill="#fff"/>
+    <rect x="11" y="8.4" width="5.4" height="3.2" rx="1.6" fill="#fff"/>
   </svg>
 );
 const IconImage = ({ size = 24 }) => (
@@ -65,9 +64,9 @@ const IconX = ({ size = 18, color = '#B0B8C1' }) => (
       fill={color}/>
   </svg>
 );
-const IconStar = () => (
-  <svg width="24" height="24" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-    <path d="M10 2L12.4 7.3L18.1 8L13.9 12L15 18L10 15L5 18L6.1 12L1.9 8L7.6 7.3L10 2Z" fill="#E8B84B"/>
+const IconStar = ({ size = 24, color = '#E8B84B' }) => (
+  <svg width={size} height={size} viewBox="0 0 20 20" fill="none" aria-hidden="true">
+    <path d="M10 2L12.4 7.3L18.1 8L13.9 12L15 18L10 15L5 18L6.1 12L1.9 8L7.6 7.3L10 2Z" fill={color}/>
   </svg>
 );
 const IconArrowRight = ({ size = 18 }) => (
@@ -179,64 +178,46 @@ function VariantA() {
             />
           </div>
 
+          {/* 기존 원장님 한정 특별 이벤트 배지 */}
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: 8,
+            background: 'var(--bg-surface)', color: 'var(--fg-2)',
+            padding: '7px 16px', borderRadius: 100,
+            fontSize: 14, fontWeight: 600, letterSpacing: '0.2px',
+            border: '1px solid var(--border-default)', marginBottom: 24,
+            animation: 'fadeInUp 0.5s 0.05s ease both',
+          }}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--brand-gold-deep)', flexShrink: 0 }} />
+            기존 원장님 전용
+          </div>
+
           <h1 style={{
-            fontSize: 60, fontWeight: 900, lineHeight: 1.16,
-            letterSpacing: '-2px', wordBreak: 'keep-all',
+            fontSize: 60, fontWeight: 900, lineHeight: 1.24,
+            letterSpacing: '-1.2px', wordBreak: 'keep-all', color: 'var(--fg-1)',
             marginBottom: 26, marginTop: 4,
             animation: 'fadeInUp 0.5s 0.1s ease both',
           }}>
-            <span style={{ color: 'var(--fg-1)' }}>빌리투어 하나로,</span><br />
-            <span style={{
-              background: 'linear-gradient(135deg, #1A3A6B 0%, #2B85CC 100%)',
-              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-            }}>전 세계 세입자를 만나세요.</span>
+            빌리투어 하나로,<br /><span style={{ color: 'var(--primary-400)' }}>전 세계 세입자</span>를 만나세요.
           </h1>
 
           <p style={{
-            fontSize: 25, color: 'var(--fg-2)', lineHeight: 1.6,
-            wordBreak: 'keep-all', marginBottom: 12, fontWeight: 500,
+            fontSize: 25, color: 'var(--fg-2)', lineHeight: 1.55,
+            wordBreak: 'keep-all', marginBottom: 12, fontWeight: 500, letterSpacing: '-0.3px',
             animation: 'fadeInUp 0.5s 0.2s ease both', maxWidth: 720,
           }}>
-            영어 자막·번역·썸네일에 <strong style={{ color: '#1A3A6B' }}>트렌디한 숏폼</strong>까지.<br />
-            <span style={{
-              display: 'inline-block', marginTop: 12, fontSize: 27, fontWeight: 800, color: '#1A3A6B', lineHeight: 1.4,
-            }}>
-              지금 특별 이벤트, <span style={{ color: '#2B85CC' }}>이 모든 걸 단돈 40만원</span>에.
-            </span>
+            <strong style={{ color: 'var(--fg-1)' }}>영어 자막·번역·썸네일</strong>에 <strong style={{ color: 'var(--fg-1)' }}>트렌디한 숏폼</strong>까지.<br />
+            이 모든 걸 <strong style={{ color: 'var(--brand-gold-deep)', fontWeight: 800 }}>단돈 40만원</strong>에.
           </p>
 
-          <div style={{
-            animation: 'fadeInUp 0.5s 0.3s ease both', marginTop: 40,
-            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14,
-            wordBreak: 'keep-all',
-          }}>
-            <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--fg-2)', display: 'inline-flex', alignItems: 'center', gap: 12 }}>
-              <span style={{
-                display: 'inline-flex', width: 34, height: 34, borderRadius: '50%',
-                background: '#E3F0FB', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-              }}><IconCheck size={22} color="#2B85CC" /></span>
-              기존 원장님이라면, <strong style={{ color: '#1A3A6B' }}>누구나</strong>
-            </div>
-            <div style={{ fontSize: 27, fontWeight: 800, color: 'var(--fg-1)' }}>
-              신청은 <span style={{
-                display: 'inline-block',
-                background: 'linear-gradient(135deg, #1A3A6B, #2B85CC)',
-                color: '#fff', padding: '4px 16px', borderRadius: 100,
-                fontSize: 30, fontWeight: 900, margin: '0 4px',
-              }}>딱 1분</span>이면 끝나요
-            </div>
-          </div>
-
           {/* stat strip — 새로워진 상품 요소 */}
-          <div className="stat-strip" style={{ marginTop: 56, animation: 'fadeInUp 0.5s 0.4s ease both' }}>
+          <div className="stat-strip" style={{ marginTop: 48, animation: 'fadeInUp 0.5s 0.3s ease both' }}>
             {[
-              { n: '글로벌',  l: '영어 자막·번역·썸네일', c: '#1A3A6B' },
-              { n: '숏폼',    l: '바이럴 릴스 제작·대행',  c: '#2B85CC' },
-              { n: '5채널',   l: 'YouTube·고방·인스타',    c: '#2B85CC' },
-              { n: '40만원',  l: '전부 포함 · VAT 별도',   c: '#E8B84B' },
+              { n: '글로벌',  l: '영어 자막·번역·썸네일', c: 'var(--brand-navy)' },
+              { n: '숏폼',    l: '바이럴 릴스 제작·대행',  c: 'var(--brand-navy)' },
+              { n: '5채널',   l: 'YouTube·고방·인스타',    c: 'var(--brand-navy)' },
+              { n: '40만원',  l: '전부 포함 · VAT 별도',   c: 'var(--brand-gold-deep)' },
             ].map((s, i) => (
-              <div key={i} style={{ background: '#fff', padding: '28px 12px', textAlign: 'center' }}>
+              <div key={i} style={{ background: 'var(--bg-surface)', padding: '28px 12px', textAlign: 'center' }}>
                 <div style={{ fontSize: 30, fontWeight: 900, color: s.c, letterSpacing: '-0.6px', lineHeight: 1.1 }}>{s.n}</div>
                 <div style={{ fontSize: 16, color: 'var(--fg-3)', marginTop: 9, fontWeight: 600 }}>{s.l}</div>
               </div>
