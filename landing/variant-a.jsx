@@ -179,25 +179,6 @@ function VariantA() {
             />
           </div>
 
-          {/* 배지 묶음 */}
-          <div style={{
-            display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center',
-            animation: 'fadeInUp 0.5s 0.05s ease both', marginBottom: 30,
-          }}>
-            {[
-              { label: '글로벌 출시',          bg: '#2B85CC',  color: '#fff' },
-              { label: '특별 이벤트 기간',      bg: '#E8B84B',  color: '#fff' },
-              { label: '기존 원장님 전용',      bg: '#E3F0FB',  color: '#1A3A6B' },
-            ].map((b, i) => (
-              <span key={i} style={{
-                fontSize: 16, fontWeight: 800, letterSpacing: '0.2px',
-                padding: '10px 22px', borderRadius: 100,
-                background: b.bg, color: b.color,
-                boxShadow: '0 3px 10px rgba(0,0,0,0.10)',
-              }}>{b.label}</span>
-            ))}
-          </div>
-
           <h1 style={{
             fontSize: 60, fontWeight: 900, lineHeight: 1.16,
             letterSpacing: '-2px', wordBreak: 'keep-all',
