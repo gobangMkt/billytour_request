@@ -560,6 +560,9 @@ function VariantA() {
               q="영어 자막은 어떻게 작성되나요?"
               a="담당자가 영상 내용을 영어로 번역해 <strong>직접 검수하여 삽입</strong>합니다.<br />시설명·지역명 등 고유명사도 최대한 반영해요.<br />YouTube 영어 번역 설정으로 <strong>글로벌 검색에도 노출</strong>됩니다." />
             <FaqItem
+              q="영어 자동번역 노출이 뭔가요?"
+              a="제목과 설명을 <strong>영어 버전으로 함께 등록</strong>해 둡니다.<br />평소 한국 시청자에겐 <strong>한국어 제목·설명</strong>이 그대로 보이지만,<br /><strong>YouTube 언어를 영어로 설정한 시청자</strong>에겐 같은 영상의 제목·설명이 <strong>영어로 번역되어 노출</strong>돼요.<br />덕분에 한 영상으로 국내·해외 시청자를 모두 잡을 수 있습니다." />
+            <FaqItem
               q="숏폼만 따로 신청할 수 있나요?"
               a="네, <strong>숏폼만 따로 구매(10만원)</strong>도 가능합니다.<br />추가 촬영 없이 기존 영상으로 숏폼 1개를 제작해 유튜브·인스타 두 곳에 올려드려요.<br /><br />다만 특별 이벤트 기간엔 <strong>글로벌(40만원)에 숏폼이 무료로 포함</strong>되니, 글로벌 신청이 훨씬 유리합니다." />
             <FaqItem
@@ -1287,7 +1290,7 @@ function GlobalPanel() {
   const feats = [
     { icon: <IconCamera size={30} />,   t: '현장 방문 촬영', d: '전문 장비로 투어 동선 그대로 룸투어 촬영', tag: '직접 방문' },
     { icon: <IconSubtitle size={30} />, t: '영어 자막',     d: '영상 전 구간에 검수된 영어 자막 삽입',     tag: '전 구간' },
-    { icon: <IconGlobe size={30} />,    t: '글로벌 노출',    d: '유튜브 해외 추천·영어 검색 결과에 진입',   tag: '해외 도달' },
+    { icon: <IconGlobe size={30} />,    t: '제목·설명 영어 자동번역', d: '유튜브 언어를 영어로 설정한 시청자에겐 제목·설명이 영어로 노출', tag: '해외 도달' },
     { icon: <IconImage size={30} />,    t: '영어 썸네일',    d: '외국인 클릭을 부르는 전용 썸네일 제작',     tag: '클릭률↑' },
   ];
   return (
