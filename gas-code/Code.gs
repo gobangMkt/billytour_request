@@ -1,7 +1,7 @@
 var SPREADSHEET_ID    = '1VeaQZPEn9Wnf3Yz_2Empz9Hzg1sg4NvYjB6lz4a48QY';
 // 결제요청 알림톡 — 상품별 템플릿 (버튼 URL에 토스링크가 직접 박혀있어 상품마다 분리)
 var TEMPLATE_PAYMENT_GLOBAL  = 'KA01TP260604073418605liV8A9eAgGY';  // 빌리투어_결제요청_글로벌
-var TEMPLATE_PAYMENT_SHORTS  = 'KA01TP260604074212590nlygYHB8w8t';  // 빌리투어_결제요청_숏츠
+var TEMPLATE_PAYMENT_SHORTS  = 'KA01TP2606090944184923jC2HDupV2e';  // 빌리투어_결제요청_숏츠 (영업일 5일 통일)
 var TEMPLATE_COMPLETE_GLOBAL = 'KA01TP260604101754901FfZqGa9ktQf';  // 빌리투어_작업완료_글로벌 (유튜브 업로드 완료)
 var TEMPLATE_COMPLETE_SHORTS = 'KA01TP260604101954648epByHA94rV6';  // 빌리투어_작업완료_숏츠 (릴스/인스타 업로드 완료)
 
