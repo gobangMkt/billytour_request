@@ -62,7 +62,7 @@ function checkAccess() {
 
 /* ───────────────────────────────────────────
    중복 신청 체크 (동일 URL + 동일 상품)
-   신청 내역: G(7) 빌리투어URL, J(10) 상품선택
+   신청 내역: D(4) 빌리투어URL, G(7) 상품선택
 ─────────────────────────────────────────── */
 function checkDuplicate(tourUrl, product) {
   var ss      = SpreadsheetApp.openById(SPREADSHEET_ID);
@@ -70,13 +70,13 @@ function checkDuplicate(tourUrl, product) {
   var lastRow = sheet.getLastRow();
   if (lastRow < 2) return false;
 
-  var data           = sheet.getRange(2, 1, lastRow - 1, 10).getValues();
+  var data           = sheet.getRange(2, 1, lastRow - 1, 7).getValues();
   var normalizedUrl  = String(tourUrl).trim().toLowerCase();
   var normalizedProd = String(product).trim();
 
   for (var i = 0; i < data.length; i++) {
-    var rowUrl  = String(data[i][6]).trim().toLowerCase();  // G 빌리투어URL
-    var rowProd = String(data[i][9]).trim();                // J 상품선택
+    var rowUrl  = String(data[i][3]).trim().toLowerCase();  // D 빌리투어URL
+    var rowProd = String(data[i][6]).trim();                // G 상품선택
     if (rowUrl === normalizedUrl && rowProd === normalizedProd) return true;
   }
   return false;
@@ -84,11 +84,10 @@ function checkDuplicate(tourUrl, product) {
 
 /* ───────────────────────────────────────────
    신청 폼 저장
-   신청 내역(13열):
-     A=신청일시, B=결제완료일, C=이름, D=연락처,
-     E=지점명, F=지점주소, G=빌리투어URL, H=영상제목, I=채널명,
-     J=상품선택, K=추가요청사항,
-     L=결제링크발송(발송대기/발송하기/발송완료), M=발송시간
+   신청 내역(11열) — 신청폼 입력 순서:
+     A=신청일시, B=이름, C=연락처, D=빌리투어URL,
+     E=지점명, F=지점주소, G=상품선택, H=추가요청사항,
+     I=결제완료일, J=결제링크발송(발송대기/발송하기/발송완료), K=발송시간
 ─────────────────────────────────────────── */
 function submitForm(formData) {
   var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
@@ -102,10 +101,10 @@ function submitForm(formData) {
 
   // 헤더가 없으면 생성
   if (sheet.getLastRow() === 0) {
-    sheet.appendRow(['신청일시', '결제완료일', '이름', '연락처', '지점명', '지점주소',
-                     '빌리투어 URL', '영상 제목', '채널명', '상품 선택', '추가 요청사항',
+    sheet.appendRow(['신청일시', '이름', '연락처', '빌리투어 URL', '지점명', '지점주소',
+                     '상품 선택', '추가 요청사항', '결제완료일',
                      '결제링크 발송', '발송시간']);
-    sheet.getRange(1, 1, 1, 13).setFontWeight('bold').setBackground('#f0f0f0');
+    sheet.getRange(1, 1, 1, 11).setFontWeight('bold').setBackground('#f0f0f0');
   }
 
   var now          = new Date();
@@ -113,42 +112,40 @@ function submitForm(formData) {
 
   sheet.appendRow([
     now,
-    '',
     formData.name       || '',
     formData.phone      || '',
+    formData.tourUrl    || '',
     formData.branchName || '',
     formData.branchAddr || '',
-    formData.tourUrl    || '',
-    formData.ytTitle    || '',
-    formData.ytChannel  || '',
     productLabel,
     formData.memo       || '',
+    '',
     '발송대기',
     ''
   ]);
 
-  // L열(결제링크 발송) "발송대기" 명시 (체크박스 서식 잔재 방지)
+  // J열(결제링크 발송) "발송대기" 명시 (체크박스 서식 잔재 방지)
   var newRow = sheet.getLastRow();
-  sheet.getRange(newRow, 12).setValue('발송대기');
+  sheet.getRange(newRow, 10).setValue('발송대기');
 
   // ── 작업 내역 시트에도 기록 (제작 관리용) ──
-  // 작업 내역(12열):
-  // A=신청일시, B=이름, C=연락처, D=지점명, E=지점주소, F=상품,
-  // G=빌리투어URL, H=작업상태, I=결과물URL, J=완료일, K=완료알림발송, L=발송시간
+  // 작업 내역(11열) — 신청내역과 동일 순서:
+  // A=신청일시, B=이름, C=연락처, D=빌리투어URL, E=지점명, F=지점주소, G=상품,
+  // H=결과물URL, I=완료일, J=완료알림발송, K=발송시간
   var workSheet = ss.getSheetByName('작업 내역');
   if (workSheet) {
     if (workSheet.getLastRow() === 0) {
-      workSheet.appendRow(['신청일시', '이름', '연락처', '지점명', '지점주소', '상품',
-                           '빌리투어 URL', '작업 상태', '결과물 URL', '완료일',
+      workSheet.appendRow(['신청일시', '이름', '연락처', '빌리투어 URL', '지점명', '지점주소',
+                           '상품', '결과물 URL', '완료일',
                            '완료알림 발송', '발송시간']);
-      workSheet.getRange(1, 1, 1, 12).setFontWeight('bold').setBackground('#f0f0f0');
+      workSheet.getRange(1, 1, 1, 11).setFontWeight('bold').setBackground('#f0f0f0');
     }
     workSheet.appendRow([
       now, formData.name || '', formData.phone || '',
-      formData.branchName || '', formData.branchAddr || '', productLabel,
-      formData.tourUrl || '', '대기', '', '', '발송대기', ''
+      formData.tourUrl || '', formData.branchName || '', formData.branchAddr || '', productLabel,
+      '', '', '발송대기', ''
     ]);
-    workSheet.getRange(workSheet.getLastRow(), 11).setValue('발송대기');
+    workSheet.getRange(workSheet.getLastRow(), 10).setValue('발송대기');
   }
 
   // 신청 접수 이메일 알림
@@ -165,8 +162,6 @@ function submitForm(formData) {
       '지점명: ' + (formData.branchName || ''),
       '지점 주소: ' + (formData.branchAddr || ''),
       '빌리투어 URL: ' + (formData.tourUrl || ''),
-      '영상 제목: ' + (formData.ytTitle || ''),
-      '채널명: ' + (formData.ytChannel || ''),
       '',
       '▶ 신청 내역 확인: https://docs.google.com/spreadsheets/d/' + SPREADSHEET_ID,
     ].join('\n');
@@ -392,8 +387,8 @@ function sendAlimtalk(to, templateId, variables) {
 
 /* ───────────────────────────────────────────
    onEdit 트리거 — 발송 드롭박스 "발송하기" 선택 시 알림톡 발송
-   · 신청 내역 L열(12) → 결제링크 알림톡
-   · 작업 내역 K열(11) → 완료 알림톡
+   · 신청 내역 J열(10) → 결제링크 알림톡
+   · 작업 내역 J열(10) → 완료 알림톡
 ─────────────────────────────────────────── */
 function onEdit(e) {
   var sheet     = e.range.getSheet();
@@ -403,26 +398,26 @@ function onEdit(e) {
 
   if (row < 2) return;
 
-  if (sheetName === '신청 내역' && col === 12) {
+  if (sheetName === '신청 내역' && col === 10) {
     handlePaymentSend(e, sheet, row);
-  } else if (sheetName === '신청 내역' && col === 2) {
+  } else if (sheetName === '신청 내역' && col === 9) {
     handlePaymentComplete(e, sheet, row);
-  } else if (sheetName === '작업 내역' && col === 11) {
+  } else if (sheetName === '작업 내역' && col === 10) {
     handleCompleteSend(e, sheet, row);
   }
 }
 
-/* 신청 내역 B열(2): 결제완료일 입력 시 결제완료 알림메일 발송 */
+/* 신청 내역 I열(9): 결제완료일 입력 시 결제완료 알림메일 발송 */
 function handlePaymentComplete(e, sheet, row) {
-  if (!e.range.getValue()) return;  // B열 비우면 무시
+  if (!e.range.getValue()) return;  // I열 비우면 무시
 
   try {
-    var rowData = sheet.getRange(row, 1, 1, 13).getValues()[0];
-    var name    = String(rowData[2] || '');   // C 이름
-    var phone   = String(rowData[3] || '');    // D 연락처
+    var rowData = sheet.getRange(row, 1, 1, 11).getValues()[0];
+    var name    = String(rowData[1] || '');   // B 이름
+    var phone   = String(rowData[2] || '');    // C 연락처
     var branch  = String(rowData[4] || '');    // E 지점명
-    var tourUrl = String(rowData[6] || '');    // G 빌리투어URL
-    var product = String(rowData[9] || '');    // J 상품선택
+    var tourUrl = String(rowData[3] || '');    // D 빌리투어URL
+    var product = String(rowData[6] || '');    // G 상품선택
 
     var NOTIFY_EMAIL = getSettings().notifyEmails || 'archoit94@neoflat.net';
     var subject = '[빌리투어] 결제 완료 — ' + name + ' / ' + product;
@@ -444,48 +439,48 @@ function handlePaymentComplete(e, sheet, row) {
   }
 }
 
-/* 신청 내역 L열(12): 결제링크 알림톡 발송 / M열(13) 발송시간 */
+/* 신청 내역 J열(10): 결제링크 알림톡 발송 / K열(11) 발송시간 */
 function handlePaymentSend(e, sheet, row) {
   if (String(e.range.getValue()).trim() !== '발송하기') return;
 
-  // M열(발송시간)이 이미 기록돼 있으면 재발송 안 함
-  if (sheet.getRange(row, 13).getValue()) {
+  // K열(발송시간)이 이미 기록돼 있으면 재발송 안 함
+  if (sheet.getRange(row, 11).getValue()) {
     e.range.setValue('발송완료');
     return;
   }
 
-  var rowData = sheet.getRange(row, 1, 1, 13).getValues()[0];
-  var phone   = String(rowData[3]).replace(/[^0-9]/g, '');  // D 연락처
-  var name    = String(rowData[2] || '').trim();            // C 이름
-  var product    = String(rowData[9] || '').trim();         // J 상품선택 (글로벌재구매/숏츠단건)
+  var rowData = sheet.getRange(row, 1, 1, 11).getValues()[0];
+  var phone   = String(rowData[2]).replace(/[^0-9]/g, '');  // C 연락처
+  var name    = String(rowData[1] || '').trim();            // B 이름
+  var product    = String(rowData[6] || '').trim();         // G 상품선택 (글로벌재구매/숏츠단건)
   var isShorts   = product === '숏츠단건';
   var templateId = isShorts ? TEMPLATE_PAYMENT_SHORTS : TEMPLATE_PAYMENT_GLOBAL;  // 결제링크는 템플릿 버튼에 박힘
 
   try {
     sendAlimtalk(phone, templateId, { '#{신청자}': name });
-    sheet.getRange(row, 13).setValue(
+    sheet.getRange(row, 11).setValue(
       Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd HH:mm:ss')
     );
-    sheet.getRange(row, 12).setValue('발송완료');
+    sheet.getRange(row, 10).setValue('발송완료');
   } catch (err) {
     Logger.log('결제링크 알림톡 실패: ' + err);
     e.range.setValue('발송대기');
   }
 }
 
-/* 작업 내역 K열(11): 완료 알림톡 발송 (결과물 URL + 완료일 입력 시에만) / L열(12) 발송시간 */
+/* 작업 내역 J열(10): 완료 알림톡 발송 (결과물 URL + 완료일 입력 시에만) / K열(11) 발송시간 */
 function handleCompleteSend(e, sheet, row) {
   if (String(e.range.getValue()).trim() !== '발송하기') return;
 
-  // L열(발송시간)이 이미 기록돼 있으면 재발송 안 함
-  if (sheet.getRange(row, 12).getValue()) {
+  // K열(발송시간)이 이미 기록돼 있으면 재발송 안 함
+  if (sheet.getRange(row, 11).getValue()) {
     e.range.setValue('발송완료');
     return;
   }
 
-  var rowData   = sheet.getRange(row, 1, 1, 12).getValues()[0];
-  var resultUrl = String(rowData[8] || '').trim();   // I 결과물 URL
-  var doneDate  = rowData[9];                          // J 완료일
+  var rowData   = sheet.getRange(row, 1, 1, 11).getValues()[0];
+  var resultUrl = String(rowData[7] || '').trim();   // H 결과물 URL
+  var doneDate  = rowData[8];                          // I 완료일
 
   // 결과물 URL + 완료일 둘 다 채워져야 발송
   if (!resultUrl || !doneDate) {
@@ -495,16 +490,16 @@ function handleCompleteSend(e, sheet, row) {
 
   var phone      = String(rowData[2]).replace(/[^0-9]/g, ''); // C 연락처
   var name       = String(rowData[1] || '').trim();           // B 이름
-  var product    = String(rowData[5] || '').trim();           // F 상품 (글로벌재구매/숏츠단건)
+  var product    = String(rowData[6] || '').trim();           // G 상품 (글로벌재구매/숏츠단건)
   // 결과물 URL: 글로벌=유튜브, 숏츠=인스타(릴스) — 상품별 템플릿 분기
   var templateId = product === '숏츠단건' ? TEMPLATE_COMPLETE_SHORTS : TEMPLATE_COMPLETE_GLOBAL;
 
   try {
     sendAlimtalk(phone, templateId, { '#{신청자}': name, '#{결과물}': resultUrl });
-    sheet.getRange(row, 12).setValue(
+    sheet.getRange(row, 11).setValue(
       Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd HH:mm:ss')
     );
-    sheet.getRange(row, 11).setValue('발송완료');
+    sheet.getRange(row, 10).setValue('발송완료');
   } catch (err) {
     Logger.log('완료 알림톡 실패: ' + err);
     e.range.setValue('발송대기');
@@ -513,20 +508,40 @@ function handleCompleteSend(e, sheet, row) {
 
 /* ───────────────────────────────────────────
    발송 드롭박스 + 조건부 색상 설정 (수동 실행)
-   · 신청 내역 L열(12)  · 작업 내역 K열(11)  · 작업 내역 작업상태 H열(8)
+   · 신청 내역: J열(10) 결제링크 발송 / G열(7) 상품 색상
+   · 작업 내역: J열(10) 완료알림 발송 / G열(7) 상품 색상
 ─────────────────────────────────────────── */
 function setupDropdowns() {
   var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
 
   var apply = ss.getSheetByName('신청 내역');
-  if (apply) applyStatusDropdown(apply, 12);
+  if (apply) {
+    applyStatusDropdown(apply, 10);
+    applyProductColors(apply, 7);
+  }
 
   var work = ss.getSheetByName('작업 내역');
   if (work) {
-    applyStatusDropdown(work, 11);
-    applyWorkStatusDropdown(work, 8); // H열 작업 상태
+    applyStatusDropdown(work, 10);
+    applyProductColors(work, 7);
   }
   Logger.log('드롭박스 + 색상 설정 완료');
+}
+
+/* 상품 색상 구분 (글로벌재구매=블루 / 숏츠단건=골드) — G열 */
+function applyProductColors(sheet, col) {
+  var range = sheet.getRange(2, col, 1000, 1);
+
+  var existing = sheet.getConditionalFormatRules().filter(function(r) {
+    return r.getRanges().every(function(rng) { return rng.getColumn() !== col; });
+  });
+  var rules = [
+    SpreadsheetApp.newConditionalFormatRule().whenTextEqualTo('글로벌재구매')
+      .setBackground('#E3F0FB').setFontColor('#1A3A6B').setRanges([range]).build(),
+    SpreadsheetApp.newConditionalFormatRule().whenTextEqualTo('숏츠단건')
+      .setBackground('#FFF4D6').setFontColor('#8A6D1B').setRanges([range]).build()
+  ];
+  sheet.setConditionalFormatRules(existing.concat(rules));
 }
 
 /* 발송 상태(발송대기/발송하기/발송완료) 드롭박스 + 색상 */
@@ -553,16 +568,6 @@ function applyStatusDropdown(sheet, col) {
   sheet.setConditionalFormatRules(existing.concat(newRules));
 }
 
-/* 작업 상태(대기/촬영/편집/업로드/완료) 드롭박스 */
-function applyWorkStatusDropdown(sheet, col) {
-  var range = sheet.getRange(2, col, 1000, 1);
-  range.clearDataValidations();
-  range.setDataValidation(
-    SpreadsheetApp.newDataValidation()
-      .requireValueInList(['대기', '촬영', '편집', '업로드', '완료'], false).build()
-  );
-}
-
 /* ───────────────────────────────────────────
    시트 초기 생성 — 배포 후 최초 1회 수동 실행
    설정 / 신청 내역 / 작업 내역 시트 + 헤더 + 드롭박스
@@ -586,22 +591,22 @@ function setupSheets() {
     ]);
   }
 
-  // 신청 내역 헤더
+  // 신청 내역 헤더 — 신청폼 입력 순서
   var apply = ss.getSheetByName('신청 내역');
   if (apply.getLastRow() === 0) {
-    apply.appendRow(['신청일시', '결제완료일', '이름', '연락처', '지점명', '지점주소',
-                     '빌리투어 URL', '영상 제목', '채널명', '상품 선택', '추가 요청사항',
+    apply.appendRow(['신청일시', '이름', '연락처', '빌리투어 URL', '지점명', '지점주소',
+                     '상품 선택', '추가 요청사항', '결제완료일',
                      '결제링크 발송', '발송시간']);
-    apply.getRange(1, 1, 1, 13).setFontWeight('bold').setBackground('#f0f0f0');
+    apply.getRange(1, 1, 1, 11).setFontWeight('bold').setBackground('#f0f0f0');
   }
 
-  // 작업 내역 헤더
+  // 작업 내역 헤더 — 신청내역과 동일 순서
   var work = ss.getSheetByName('작업 내역');
   if (work.getLastRow() === 0) {
-    work.appendRow(['신청일시', '이름', '연락처', '지점명', '지점주소', '상품',
-                    '빌리투어 URL', '작업 상태', '결과물 URL', '완료일',
+    work.appendRow(['신청일시', '이름', '연락처', '빌리투어 URL', '지점명', '지점주소',
+                    '상품', '결과물 URL', '완료일',
                     '완료알림 발송', '발송시간']);
-    work.getRange(1, 1, 1, 12).setFontWeight('bold').setBackground('#f0f0f0');
+    work.getRange(1, 1, 1, 11).setFontWeight('bold').setBackground('#f0f0f0');
   }
 
   setupDropdowns();
