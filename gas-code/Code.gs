@@ -386,11 +386,13 @@ function sendAlimtalk(to, templateId, variables) {
 }
 
 /* ───────────────────────────────────────────
-   onEdit 트리거 — 발송 드롭박스 "발송하기" 선택 시 알림톡 발송
+   편집 트리거 — 발송 드롭박스 "발송하기" 선택 시 알림톡 발송
    · 신청 내역 J열(10) → 결제링크 알림톡
    · 작업 내역 J열(10) → 완료 알림톡
+   ⚠️ 함수명을 'onEdit'으로 두면 권한없는 단순 트리거로도 자동 실행돼
+      UrlFetch(SOLAPI)가 막힌다. 설치형 전용 이름(handleSheetEdit) 사용.
 ─────────────────────────────────────────── */
-function onEdit(e) {
+function handleSheetEdit(e) {
   var sheet     = e.range.getSheet();
   var sheetName = sheet.getName();
   var col       = e.range.getColumn();
@@ -407,9 +409,12 @@ function onEdit(e) {
   }
 }
 
-/* 신청 내역 I열(9): 결제완료일 입력 시 결제완료 알림메일 발송 */
+/* 신청 내역 I열(9): 결제완료일 입력 시 행 노랑 + 결제완료 알림메일 발송 */
 function handlePaymentComplete(e, sheet, row) {
-  if (!e.range.getValue()) return;  // I열 비우면 무시
+  var paid = e.range.getValue();
+  // 행 배경: 결제완료일 있으면 노랑, 비우면 흰색 복귀
+  sheet.getRange(row, 1, 1, 11).setBackground(paid ? ROW_BG_PAID : ROW_BG_NONE);
+  if (!paid) return;  // I열 비우면 메일 안 보냄
 
   try {
     var rowData = sheet.getRange(row, 1, 1, 11).getValues()[0];
@@ -457,14 +462,21 @@ function handlePaymentSend(e, sheet, row) {
   var templateId = isShorts ? TEMPLATE_PAYMENT_SHORTS : TEMPLATE_PAYMENT_GLOBAL;  // 결제링크는 템플릿 버튼에 박힘
 
   try {
-    sendAlimtalk(phone, templateId, { '#{신청자}': name });
+    var res = sendAlimtalk(phone, templateId, { '#{신청자}': name });
+    var code = res.getResponseCode();
+    var body = JSON.parse(res.getContentText() || '{}');
+    if (code !== 200 || (body.statusCode && body.statusCode !== '2000')) {
+      throw new Error('HTTP ' + code + ' / ' + (body.statusMessage || res.getContentText()));
+    }
     sheet.getRange(row, 11).setValue(
       Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd HH:mm:ss')
     );
     sheet.getRange(row, 10).setValue('발송완료');
+    e.range.clearNote();
   } catch (err) {
     Logger.log('결제링크 알림톡 실패: ' + err);
     e.range.setValue('발송대기');
+    e.range.setNote('발송오류: ' + err + ' (' + Utilities.formatDate(new Date(), 'Asia/Seoul', 'HH:mm:ss') + ')');
   }
 }
 
@@ -485,6 +497,9 @@ function handleCompleteSend(e, sheet, row) {
   // 결과물 URL + 완료일 둘 다 채워져야 발송
   if (!resultUrl || !doneDate) {
     e.range.setValue('발송대기');
+    e.range.setNote('반려: 결과물URL=' + (resultUrl ? 'O' : '비었음') +
+                    ' / 완료일=' + (doneDate ? 'O' : '비었음') +
+                    ' (' + Utilities.formatDate(new Date(), 'Asia/Seoul', 'HH:mm:ss') + ')');
     return;
   }
 
@@ -495,14 +510,22 @@ function handleCompleteSend(e, sheet, row) {
   var templateId = product === '숏츠단건' ? TEMPLATE_COMPLETE_SHORTS : TEMPLATE_COMPLETE_GLOBAL;
 
   try {
-    sendAlimtalk(phone, templateId, { '#{신청자}': name, '#{결과물}': resultUrl });
+    var res = sendAlimtalk(phone, templateId, { '#{신청자}': name, '#{결과물}': resultUrl });
+    var code = res.getResponseCode();
+    var body = JSON.parse(res.getContentText() || '{}');
+    if (code !== 200 || (body.statusCode && body.statusCode !== '2000')) {
+      throw new Error('HTTP ' + code + ' / ' + (body.statusMessage || res.getContentText()));
+    }
     sheet.getRange(row, 11).setValue(
       Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd HH:mm:ss')
     );
     sheet.getRange(row, 10).setValue('발송완료');
+    e.range.clearNote();
+    markApplyRowDone(rowData);  // 매칭 신청내역 행 → 주황(발행완료)
   } catch (err) {
     Logger.log('완료 알림톡 실패: ' + err);
     e.range.setValue('발송대기');
+    e.range.setNote('발송오류: ' + err + ' (' + Utilities.formatDate(new Date(), 'Asia/Seoul', 'HH:mm:ss') + ')');
   }
 }
 
@@ -528,7 +551,8 @@ function setupDropdowns() {
   Logger.log('드롭박스 + 색상 설정 완료');
 }
 
-/* 상품 색상 구분 (글로벌재구매=블루 / 숏츠단건=골드) — G열 */
+/* 상품 글자색 구분 (글로벌재구매=네이비 / 숏츠단건=골드) — G열.
+   배경은 비워서 행 상태색(흰/노랑/주황)이 G열 배경도 함께 덮도록 함 */
 function applyProductColors(sheet, col) {
   var range = sheet.getRange(2, col, 1000, 1);
 
@@ -537,11 +561,76 @@ function applyProductColors(sheet, col) {
   });
   var rules = [
     SpreadsheetApp.newConditionalFormatRule().whenTextEqualTo('글로벌재구매')
-      .setBackground('#E3F0FB').setFontColor('#1A3A6B').setRanges([range]).build(),
+      .setFontColor('#1A3A6B').setBold(true).setRanges([range]).build(),
     SpreadsheetApp.newConditionalFormatRule().whenTextEqualTo('숏츠단건')
-      .setBackground('#FFF4D6').setFontColor('#8A6D1B').setRanges([range]).build()
+      .setFontColor('#B8860B').setBold(true).setRanges([range]).build()
   ];
   sheet.setConditionalFormatRules(existing.concat(rules));
+}
+
+/* ───────────────────────────────────────────
+   행 상태 배경색 (신청 내역만)
+   · 흰(#FFFFFF)   = 신청완료(기본)
+   · 노랑(#FFF2CC) = 결제완료 (결제완료일 I열 입력)
+   · 주황(#FCE5CD) = 발행완료 (작업내역 완료알림 발송완료 → 매칭 행)
+─────────────────────────────────────────── */
+var ROW_BG_PAID = '#FFE599';   // 연한 노랑 2 (결제완료)
+var ROW_BG_DONE = '#E69318';   // 진한 주황색 1 (발행완료)
+var ROW_BG_NONE = '#FFFFFF';   // 흰 (신청완료)
+
+/* 작업내역 완료알림 발송완료 시 → 매칭되는 신청내역 행을 주황으로
+   (빌리투어 URL + 연락처로 매칭) */
+function markApplyRowDone(workRowData) {
+  var url   = String(workRowData[3] || '').trim().toLowerCase();   // D 빌리투어URL
+  var phone = String(workRowData[2] || '').replace(/[^0-9]/g, ''); // C 연락처
+  if (!url) return;
+
+  var apply = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName('신청 내역');
+  var last  = apply.getLastRow();
+  if (last < 2) return;
+
+  var data = apply.getRange(2, 1, last - 1, 11).getValues();  // A~K
+  for (var i = 0; i < data.length; i++) {
+    var rUrl   = String(data[i][3] || '').trim().toLowerCase();   // D
+    var rPhone = String(data[i][2] || '').replace(/[^0-9]/g, ''); // C
+    if (rUrl === url && rPhone === phone) {
+      apply.getRange(i + 2, 1, 1, 11).setBackground(ROW_BG_DONE);
+      return;
+    }
+  }
+}
+
+/* 신청 내역 기존 행 색 일괄 정리 (수동 실행 — 과거 데이터 소급 적용) */
+function recolorApplySheet() {
+  var ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var apply = ss.getSheetByName('신청 내역');
+  var work  = ss.getSheetByName('작업 내역');
+  var last  = apply.getLastRow();
+  if (last < 2) return;
+
+  // 작업내역 발송완료 건(J열=발송완료)의 URL+연락처 집합
+  var doneSet = {};
+  if (work && work.getLastRow() >= 2) {
+    var w = work.getRange(2, 1, work.getLastRow() - 1, 11).getValues();
+    for (var j = 0; j < w.length; j++) {
+      if (String(w[j][9] || '').trim() === '발송완료') {  // J 완료알림 발송
+        doneSet[matchKey(w[j][3], w[j][2])] = true;
+      }
+    }
+  }
+
+  var a = apply.getRange(2, 1, last - 1, 11).getValues();
+  for (var i = 0; i < a.length; i++) {
+    var bg = ROW_BG_NONE;
+    if (doneSet[matchKey(a[i][3], a[i][2])]) bg = ROW_BG_DONE;  // 주황 우선
+    else if (a[i][8])                        bg = ROW_BG_PAID;  // I 결제완료일 → 노랑
+    apply.getRange(i + 2, 1, 1, 11).setBackground(bg);
+  }
+  Logger.log('신청 내역 행 색 일괄 정리 완료');
+}
+
+function matchKey(url, phone) {
+  return String(url || '').trim().toLowerCase() + '|' + String(phone || '').replace(/[^0-9]/g, '');
 }
 
 /* 발송 상태(발송대기/발송하기/발송완료) 드롭박스 + 색상 */
@@ -678,12 +767,14 @@ function doPost(e) {
 
 /* ───────────────────────────────────────────
    설치형 트리거 등록 — 최초 1회 수동 실행
+   (기존 onEdit 트리거가 있으면 함께 제거 후 handleSheetEdit로 재등록)
 ─────────────────────────────────────────── */
 function setupTrigger() {
   ScriptApp.getProjectTriggers().forEach(function(t) {
-    if (t.getHandlerFunction() === 'onEdit') ScriptApp.deleteTrigger(t);
+    var fn = t.getHandlerFunction();
+    if (fn === 'onEdit' || fn === 'handleSheetEdit') ScriptApp.deleteTrigger(t);
   });
-  ScriptApp.newTrigger('onEdit')
+  ScriptApp.newTrigger('handleSheetEdit')
     .forSpreadsheet(SpreadsheetApp.openById(SPREADSHEET_ID))
     .onEdit()
     .create();
@@ -695,4 +786,25 @@ function setupTrigger() {
 function testAuth() {
   var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   Logger.log(ss.getName());
+}
+
+/* ───────────────────────────────────────────
+   발송 진단 — 편집기에서 직접 실행
+   사용법: 아래 MY_PHONE 를 본인(테스트) 번호로 바꾼 뒤 testSend 실행 → 로그 확인
+─────────────────────────────────────────── */
+function testSend() {
+  var MY_PHONE = '01000000000';  // ← 테스트 받을 번호로 교체
+
+  var p = PropertiesService.getScriptProperties();
+  Logger.log('SOLAPI_API_KEY: '    + (p.getProperty('SOLAPI_API_KEY')    ? '설정됨' : '❌ 없음'));
+  Logger.log('SOLAPI_API_SECRET: ' + (p.getProperty('SOLAPI_API_SECRET') ? '설정됨' : '❌ 없음'));
+  Logger.log('SOLAPI_PF_ID: '      + (p.getProperty('SOLAPI_PF_ID')      ? '설정됨' : '❌ 없음'));
+
+  if (MY_PHONE === '01000000000') {
+    Logger.log('⚠️ MY_PHONE 을 본인 번호로 바꾼 뒤 다시 실행하세요.');
+    return;
+  }
+  var res = sendAlimtalk(MY_PHONE, TEMPLATE_PAYMENT_GLOBAL, { '#{신청자}': '테스트' });
+  Logger.log('HTTP ' + res.getResponseCode());
+  Logger.log('SOLAPI 응답: ' + res.getContentText());
 }
