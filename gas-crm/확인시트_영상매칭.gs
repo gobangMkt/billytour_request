@@ -16,6 +16,7 @@ function onOpen() {
   SpreadsheetApp.getUi()
     .createMenu('CRM')
     .addItem('확인시트 영상매칭 갱신', '확인시트_영상매칭')
+    .addItem('2년 기준 분리 + 중복색표기', '세그먼트_2년분리')
     .addToUi();
 }
 
@@ -55,6 +56,83 @@ function 확인시트_영상매칭() {
   confirm.setFrozenRows(1);
   try { SpreadsheetApp.getUi().alert('완료: ' + out.length + '건 기록했습니다.'); } catch (e) {}
   return out.length;  // clasp run 등 헤드리스 실행 시 반환값으로 확인
+}
+
+/**
+ * 확인시트(314건)를 업로드일 기준 "지금-2년"으로 분리:
+ *   2년전 = 업로드일 <= (오늘-2년)  (오래된 영상 → 글로벌 재구매 타겟)
+ *   2년후 = 업로드일 >  (오늘-2년)  (최근 영상 → 숏츠 타겟)
+ * 각 시트에서 휴대폰번호(D열) 중복 그룹은 그룹별 배경색으로 묶어 표시.
+ */
+function 세그먼트_2년분리() {
+  var ss = SpreadsheetApp.getActive();
+  var src = sheetByGid_(ss, CONFIRM_GID);
+  var data = src.getDataRange().getValues();
+  if (data.length < 2) throw new Error('확인시트에 데이터가 없습니다. 먼저 영상매칭을 실행하세요.');
+
+  var header = data[0];
+  var cutoff = new Date();
+  cutoff.setFullYear(cutoff.getFullYear() - 2);
+
+  var older = [], newer = [];
+  for (var i = 1; i < data.length; i++) {
+    var d = toDate_(data[i][0]);
+    // 날짜 파싱 실패분은 안전하게 '2년후(최근)'로 보내 누락 방지
+    if (d && d <= cutoff) older.push(data[i]);
+    else newer.push(data[i]);
+  }
+
+  writeSegment_(ss, '2년전', header, older);
+  writeSegment_(ss, '2년후', header, newer);
+
+  var msg = '완료\n2년전(오래됨): ' + older.length + '건\n2년후(최근): ' + newer.length + '건\n기준일: ' +
+            Utilities.formatDate(cutoff, Session.getScriptTimeZone(), 'yyyy-MM-dd');
+  try { SpreadsheetApp.getUi().alert(msg); } catch (e) {}
+  return { older: older.length, newer: newer.length };
+}
+
+function writeSegment_(ss, name, header, rows) {
+  var sh = ss.getSheetByName(name);
+  if (sh) sh.clear(); else sh = ss.insertSheet(name);
+
+  sh.getRange(1, 1, 1, header.length).setValues([header]).setFontWeight('bold').setBackground('#1A3A6B').setFontColor('#FFFFFF');
+  sh.setFrozenRows(1);
+  if (!rows.length) return;
+  sh.getRange(2, 1, rows.length, header.length).setValues(rows);
+
+  // 휴대폰번호(D열, index 3) 중복 그룹 → 그룹별 색상
+  var palette = ['#FFF2CC', '#D9EAD3', '#CFE2F3', '#FCE5CD', '#EAD1DC', '#D9D2E9', '#FFE599', '#B6D7A8', '#A4C2F4', '#F9CB9C'];
+  var groups = {};
+  for (var i = 0; i < rows.length; i++) {
+    var key = normPhone_(rows[i][3]);
+    if (!key) continue;
+    (groups[key] = groups[key] || []).push(i);
+  }
+  var ci = 0;
+  Object.keys(groups).forEach(function (k) {
+    var idx = groups[k];
+    if (idx.length < 2) return;              // 중복(2건 이상)만 색칠
+    var color = palette[ci % palette.length]; ci++;
+    idx.forEach(function (r) {
+      sh.getRange(r + 2, 1, 1, header.length).setBackground(color);
+    });
+  });
+  sh.autoResizeColumns(1, header.length);
+}
+
+// 휴대폰번호 정규화(숫자만) — 중복 판정용
+function normPhone_(v) {
+  if (v === null || v === undefined) return '';
+  return String(v).replace(/[^0-9]/g, '');
+}
+
+// 업로드일 → Date (Date/문자 혼재 대응, '2024.03.01' '2024/3/1' '2024-03-01' 허용)
+function toDate_(v) {
+  if (v instanceof Date) return v;
+  if (v === null || v === undefined || v === '') return null;
+  var s = String(v).trim().replace(/[.\/]/g, '-').replace(/-+$/, '');
+  var d = new Date(s);
+  return isNaN(d.getTime()) ? null : d;
 }
 
 function sheetByGid_(ss, gid) {
