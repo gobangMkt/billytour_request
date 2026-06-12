@@ -415,7 +415,11 @@ function handlePaymentComplete(e, sheet, row) {
   // 행 배경: 결제완료일 있으면 노랑, 비우면 흰색 복귀
   sheet.getRange(row, 1, 1, 11).setBackground(paid ? ROW_BG_PAID : ROW_BG_NONE);
   if (!paid) return;  // I열 비우면 메일 안 보냄
+  notifyBillitourPaymentComplete_(sheet, row, e.range.getDisplayValue());
+}
 
+/* 결제완료 알림메일 — handleSheetEdit / CS앱 setPaymentDate 공용(e 비의존) */
+function notifyBillitourPaymentComplete_(sheet, row, displayDate) {
   try {
     var rowData = sheet.getRange(row, 1, 1, 11).getValues()[0];
     var name    = String(rowData[1] || '');   // B 이름
@@ -429,7 +433,7 @@ function handlePaymentComplete(e, sheet, row) {
     var body = [
       '결제가 완료 처리됐어요.',
       '',
-      '결제완료일: ' + e.range.getDisplayValue(),
+      '결제완료일: ' + displayDate,
       '상품: ' + product,
       '이름: ' + name,
       '전화번호: ' + phone,
@@ -754,6 +758,12 @@ function doPost(e) {
       result = getYoutubeInfo(payload.url);
     } else if (action === 'resolvePlace') {
       result = resolvePlace(payload.url);
+    } else if (action === 'listRequests') {
+      result = listRequests(payload.token);
+    } else if (action === 'sendPaymentLink') {
+      result = sendPaymentLink(payload.token, payload.row);
+    } else if (action === 'setPaymentDate') {
+      result = setPaymentDate(payload.token, payload.row, payload.date);
     } else {
       result = { error: 'Unknown action: ' + action };
     }
@@ -807,4 +817,115 @@ function testSend() {
   var res = sendAlimtalk(MY_PHONE, TEMPLATE_PAYMENT_GLOBAL, { '#{신청자}': '테스트' });
   Logger.log('HTTP ' + res.getResponseCode());
   Logger.log('SOLAPI 응답: ' + res.getContentText());
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CS 도움앱 — 신규 요청 인박스 중계 (listRequests / sendPaymentLink / setPaymentDate)
+   신청 내역(11열): A신청일시 B이름 C연락처 D빌리투어URL E지점명 F지점주소
+                    G상품선택 H추가요청 I결제완료일 J결제링크발송 K발송시간
+   공유 토큰(Script Property INBOX_TOKEN) 검증. 연락처(C)는 응답에서 제외.
+═══════════════════════════════════════════════════════════ */
+
+function checkInboxToken_(token) {
+  var t = PropertiesService.getScriptProperties().getProperty('INBOX_TOKEN');
+  return !!t && token === t;
+}
+
+function fmtDateTime_(v) {
+  if (!v) return '';
+  if (v instanceof Date) return Utilities.formatDate(v, 'Asia/Seoul', 'yyyy-MM-dd HH:mm');
+  return String(v);
+}
+function fmtDate_(v) {
+  if (!v) return '';
+  if (v instanceof Date) return Utilities.formatDate(v, 'Asia/Seoul', 'yyyy-MM-dd');
+  return String(v);
+}
+
+// 신청 내역(11열) → 연락처(C,3번째) 제외 목록. 결제완료일(I,9)로 paid 판정.
+function listRequests(token) {
+  if (!checkInboxToken_(token)) return { error: 'unauthorized' };
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var sheet = ss.getSheetByName('신청 내역');
+  var lastRow = sheet.getLastRow();
+  var items = [];
+  if (lastRow >= 2) {
+    var data = sheet.getRange(2, 1, lastRow - 1, 11).getValues();
+    for (var i = 0; i < data.length; i++) {
+      var r = data[i];
+      var paidVal = r[8]; // I 결제완료일
+      items.push({
+        row: i + 2,
+        신청일시: fmtDateTime_(r[0]),
+        paid: !!paidVal,
+        paidDate: fmtDate_(paidVal),
+        paidDateISO: fmtDate_(paidVal),
+        이름: String(r[1] || ''),
+        // 연락처 r[2] 제외(PII)
+        빌리투어URL: String(r[3] || ''),
+        지점명: String(r[4] || ''),
+        지점주소: String(r[5] || ''),
+        상품선택: String(r[6] || ''),
+        추가요청: String(r[7] || ''),
+        발송상태: String(r[9] || '') // J 결제링크 발송
+      });
+    }
+  }
+  return { sheetUrl: 'https://docs.google.com/spreadsheets/d/' + SPREADSHEET_ID, items: items };
+}
+
+// 결제요청 알림톡(상품별 템플릿) 발송 + J='발송완료'·K=발송시간. K열 있으면 재발송 가드.
+function sendPaymentLink(token, row) {
+  if (!checkInboxToken_(token)) return { error: 'unauthorized' };
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var sheet = ss.getSheetByName('신청 내역');
+  if (row < 2 || row > sheet.getLastRow()) return { error: 'invalid_row' };
+
+  // K열(11, 발송시간)이 이미 기록돼 있으면 재발송 안 함
+  if (sheet.getRange(row, 11).getValue()) return { ok: true, already: true };
+
+  var rowData = sheet.getRange(row, 1, 1, 11).getValues()[0];
+  var phone   = String(rowData[2] || '');         // C 연락처
+  var name    = String(rowData[1] || '').trim();  // B 이름
+  var product = String(rowData[6] || '').trim();  // G 상품선택
+  if (!phone) return { error: 'no_phone' };
+
+  var isShorts   = product === '숏츠단건';
+  var templateId = isShorts ? TEMPLATE_PAYMENT_SHORTS : TEMPLATE_PAYMENT_GLOBAL;
+  try {
+    var res = sendAlimtalk(phone, templateId, { '#{신청자}': name });
+    var code = res.getResponseCode();
+    var body = JSON.parse(res.getContentText() || '{}');
+    if (code !== 200 || (body.statusCode && body.statusCode !== '2000')) {
+      throw new Error('HTTP ' + code + ' / ' + (body.statusMessage || res.getContentText()));
+    }
+    sheet.getRange(row, 11).setValue(Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd HH:mm:ss'));
+    sheet.getRange(row, 10).setValue('발송완료');
+    return { ok: true };
+  } catch (e) {
+    return { error: String(e) };
+  }
+}
+
+// 결제완료일(I) 기입/취소. 프로그래밍 setValue는 트리거 미발동 → 행색·메일 직접 처리.
+function setPaymentDate(token, row, date) {
+  if (!checkInboxToken_(token)) return { error: 'unauthorized' };
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var sheet = ss.getSheetByName('신청 내역');
+  if (row < 2 || row > sheet.getLastRow()) return { error: 'invalid_row' };
+
+  if (!date) {
+    sheet.getRange(row, 9).clearContent(); // I열 취소
+    sheet.getRange(row, 1, 1, 11).setBackground(ROW_BG_NONE);
+    return { ok: true };
+  }
+  var d = new Date(date); // 'yyyy-MM-dd'
+  sheet.getRange(row, 9).setValue(d);
+  sheet.getRange(row, 1, 1, 11).setBackground(ROW_BG_PAID); // handlePaymentComplete와 동일 노랑
+  try {
+    notifyBillitourPaymentComplete_(sheet, row, Utilities.formatDate(d, 'Asia/Seoul', 'yyyy-MM-dd'));
+  } catch (e) {
+    Logger.log('결제완료 후속작업 실패: ' + e);
+  }
+  return { ok: true };
 }
