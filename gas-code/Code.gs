@@ -853,6 +853,7 @@ function listRequests(token) {
     var data = sheet.getRange(2, 1, lastRow - 1, 11).getValues();
     for (var i = 0; i < data.length; i++) {
       var r = data[i];
+      if (!String(r[2] || '').trim()) continue; // 연락처(C) 빈 행=공지 등 → 제외
       var paidVal = r[8]; // I 결제완료일
       items.push({
         row: i + 2,
