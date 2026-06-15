@@ -28,26 +28,47 @@
 | 타겟 | **기존 원장님 전용** (이미 빌리투어 찍은 분 → 재활용할 영상 보유) |
 | 톤 | 페인포인트·FOMO 자극형. "릴스 안 하면 손해", "아직 블로그만?" |
 
+### 🔒 절대 원칙 — 기존 시스템 무손상
+기존에 발송한 알림톡 이력·트리거·라이브 신청이 있으므로, **기존 글로벌 신청폼(`index.html`)·기존
+GAS(`gas-code/`)·기존 스프레드시트(`1VeaQ…`)는 일절 건드리지 않는다.** 릴스는 폼·데이터·알림톡까지
+**완전히 독립된 새 시스템**으로 신규 구축한다.
+
 ---
 
-## 3. 구현 방식 (A안)
+## 3. 구현 방식 — 릴스 전용 독립 시스템
 
-`landing/` 폴더 안에 릴스 entry를 추가한다. 기존 글로벌 자산은 손대지 않는다.
+릴스 시스템은 3개 요소로 구성된다. 기존 글로벌 자산은 손대지 않는다.
 
+### 3-1. 릴스 랜딩페이지 (`landing/`)
 **신규 파일**
 - `landing/reels.html` — 릴스 페이지 진입점 (React CDN + Babel Standalone, 기존 index.html 구조 복제)
-- `landing/variant-reels.jsx` — 릴스 페이지 본문 컴포넌트
+- `landing/variant-reels.jsx` — 릴스 페이지 본문 컴포넌트 (자체 Nav/Footer 포함, 글로벌 카피 없음)
 
 **재활용 (수정 없음)**
-- `landing/shared.jsx` — LandingNav, FaqItem, REQUEST_URL, CHANNEL_URL 등 공용
+- `landing/shared.jsx` — FaqItem만 사용 (LandingNav는 글로벌 전용 → 릴스용 Nav는 variant-reels 내부 정의)
 - `landing/shared.css`, `landing/colors_and_type.css` — 디자인 토큰/공용 스타일
 
-> 글로벌 전용 컴포넌트(CompareTable, GlobalPanel 등)는 reels 페이지에서 import/사용하지 않음.
-> 릴스 전용 섹션 컴포넌트는 variant-reels.jsx 내부에 둔다.
+> 글로벌 전용 컴포넌트(CompareTable, GlobalPanel, 글로벌 LandingNav 등)는 reels 페이지에서 사용 안 함.
+> 릴스 랜딩 CTA → **릴스 전용 신청폼 URL**(아래 3-2).
 
-**배포**
-- 별도 Vercel 프로젝트로 `reels.html`을 루트로 배포 → 독립 URL.
-- 기존 글로벌 Vercel 배포는 그대로 유지.
+**배포:** 별도 Vercel 프로젝트로 `reels.html`을 루트로 배포 → 독립 URL. 기존 글로벌 Vercel 배포 유지.
+
+### 3-2. 릴스 전용 신청폼 (`billytour_request` repo)
+- 이 repo(`빌리투어-상품화`)가 곧 `billytour_request`(GitHub Pages 라이브 폼)다.
+- **신규 파일 `reels.html`** — 기존 `index.html` 구조 복제 후 릴스 단일 상품으로 정리.
+  - 상품 선택 카드 제거 → 릴스 단건 고정 (상품 코드 `R` 하드코딩 전송).
+  - `GAS_URL` = **새 릴스 GAS URL** (아래 3-3).
+  - 결제 안내 문구·예시 영상을 릴스 기준으로.
+- 기존 `index.html`(글로벌+숏츠 폼)은 무손상 → URL `…/billytour_request/`(글로벌), `…/billytour_request/reels.html`(릴스)로 공존.
+
+### 3-3. 릴스 전용 GAS + 스프레드시트
+- **새 스프레드시트**: `1dwLBuPaKjlQ5dle2-fAPPdPkVf3PPQrwdNP0D_KYhas` (사용자 제공).
+- **신규 폴더 `gas-code-reels/`** — 기존 `gas-code/Code.gs` 복제 후 릴스용으로 정리:
+  - 상품 분기 제거(릴스 단일), 라벨 `릴스단건` 고정.
+  - 새 스프레드시트에 바인딩 (clasp 새 프로젝트). 기존 `gas-code/`와 별개로 `clasp push`/`deploy`.
+  - 완료 알림톡: 기존 숏츠 템플릿(릴스/인스타 업로드 완료, `KA01TP260604101954648epByHA94rV6`) 재사용.
+  - `setupSheets()`로 새 시트에 `설정`/`신청 내역`/`작업 내역` 초기화.
+- 시트 컬럼 구조·J열 발송 로직은 기존 규약(CLAUDE.md) 그대로 상속.
 
 ---
 
