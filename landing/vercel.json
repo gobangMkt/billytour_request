@@ -1,5 +1,6 @@
 {
   "buildCommand": null,
   "outputDirectory": ".",
-  "framework": null
+  "framework": null,
+  "alias": ["landing-nf1.vercel.app"]
 }
