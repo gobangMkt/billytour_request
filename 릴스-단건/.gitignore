@@ -1,0 +1,5 @@
+.vercel
+.vercelignore
+.playwright-mcp/
+form-full.png
+form-header-check.png

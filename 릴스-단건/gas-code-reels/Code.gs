@@ -586,27 +586,6 @@ var ROW_BG_PAID = '#FFE599';   // 연한 노랑 2 (결제완료)
 var ROW_BG_DONE = '#E69318';   // 진한 주황색 1 (발행완료)
 var ROW_BG_NONE = '#FFFFFF';   // 흰 (신청완료)
 
-/* 작업내역 완료알림 발송완료 시 → 매칭되는 신청내역 행을 주황으로
-   (빌리투어 URL + 연락처로 매칭) */
-function markApplyRowDone(workRowData) {
-  var url   = String(workRowData[3] || '').trim().toLowerCase();   // D 빌리투어URL
-  var phone = String(workRowData[2] || '').replace(/[^0-9]/g, ''); // C 연락처
-  if (!url) return;
-
-  var apply = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName('신청내역');
-  var last  = apply.getLastRow();
-  if (last < 2) return;
-
-  var data = apply.getRange(2, 1, last - 1, 11).getValues();  // A~K
-  for (var i = 0; i < data.length; i++) {
-    var rUrl   = String(data[i][3] || '').trim().toLowerCase();   // D
-    var rPhone = String(data[i][2] || '').replace(/[^0-9]/g, ''); // C
-    if (rUrl === url && rPhone === phone) {
-      apply.getRange(i + 2, 1, 1, 11).setBackground(ROW_BG_DONE);
-      return;
-    }
-  }
-}
 
 /* 신청내역 기존 행 색 일괄 정리 (수동 실행 — 과거 데이터 소급 적용)
    O열(15) 완료발송=발송완료 → 주황 / J열(10) 결제완료일 있음 → 노랑 */
@@ -627,11 +606,7 @@ function recolorApplySheet() {
   Logger.log('신청내역 행 색 일괄 정리 완료');
 }
 
-function matchKey(url, phone) {
-  return String(url || '').trim().toLowerCase() + '|' + String(phone || '').replace(/[^0-9]/g, '');
-}
-
-/* 발송 상태(발송대기/발송하기/발송완료) 드롭박스 + 색상 */
+/* 발송 상태(검수중/발송하기/발송완료) 드롭박스 + 색상 */
 function applyStatusDropdown(sheet, col) {
   var range = sheet.getRange(2, col, 1000, 1);
   range.clearDataValidations();
@@ -645,8 +620,8 @@ function applyStatusDropdown(sheet, col) {
     return r.getRanges().every(function(rng) { return rng.getColumn() !== col; });
   });
   var newRules = [
-    SpreadsheetApp.newConditionalFormatRule().whenTextEqualTo('발송대기')
-      .setBackground('#F5F5F5').setFontColor('#9E9E9E').setRanges([range]).build(),
+    SpreadsheetApp.newConditionalFormatRule().whenTextEqualTo('검수중')
+      .setBackground('#E3F2FD').setFontColor('#1565C0').setRanges([range]).build(),
     SpreadsheetApp.newConditionalFormatRule().whenTextEqualTo('발송하기')
       .setBackground('#FFF8E1').setFontColor('#F57F17').setRanges([range]).build(),
     SpreadsheetApp.newConditionalFormatRule().whenTextEqualTo('발송완료')
@@ -695,7 +670,7 @@ function setupSheets() {
     apply.appendRow([
       '신청일시', '상품', '신청자명', '연락처', '지점명', '지점주소',
       '빌리투어 영상 URL', '고방 플레이스 URL', '메모', '결제완료일',
-      '결제발송', '결제발송시간', '결과물URL', '원본파일 URL',
+      '결제발송', '결제발송시간', '결과물URL', '완료파일URL',
       '완료발송', '완료발송시간'
     ]);
     apply.getRange(1, 1, 1, 16).setFontWeight('bold').setBackground('#f0f0f0');
@@ -844,6 +819,85 @@ function applyStatusColors() {
 function testAuth() {
   var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   Logger.log(ss.getName());
+}
+
+/* ───────────────────────────────────────────
+   ★ 진단 — 편집기에서 한 번 실행 후 [실행 로그] 전체 복사
+   "알림톡은 가는데 시트가 안 바뀜" 원인을 한 방에 특정한다.
+   1) 코드가 보는 시트(SPREADSHEET_ID)
+   2) 스크립트가 바인딩된 컨테이너 시트(parentId)
+   3) 설치된 트리거 목록 + 각 트리거가 감시하는 시트 ID
+   4) 신청내역 헤더가 정확히 16열인지 (K=결제발송, L=결제발송시간)
+   5) SOLAPI 자격증명 유무
+─────────────────────────────────────────── */
+function diagnose() {
+  var L = [];
+  L.push('======== 빌리투어 릴스 진단 ========');
+
+  // 1) 코드가 보는 시트
+  try {
+    var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    L.push('[코드 SPREADSHEET_ID] ' + SPREADSHEET_ID);
+    L.push('  └ 시트문서명: "' + ss.getName() + '"');
+  } catch (e) {
+    L.push('[코드 SPREADSHEET_ID] ' + SPREADSHEET_ID + ' → ❌ 열기 실패: ' + e);
+  }
+
+  // 2) 바인딩된 컨테이너 시트
+  try {
+    var active = SpreadsheetApp.getActiveSpreadsheet();
+    if (active) {
+      L.push('[바인딩 컨테이너] ' + active.getId());
+      L.push('  └ 시트문서명: "' + active.getName() + '"');
+      L.push('  └ 코드 시트와 동일? ' + (active.getId() === SPREADSHEET_ID ? '✅ 같음' : '❌ 다름 — 이게 버그 원인일 수 있음'));
+    } else {
+      L.push('[바인딩 컨테이너] (standalone — 컨테이너 없음)');
+    }
+  } catch (e) {
+    L.push('[바인딩 컨테이너] 확인 불가: ' + e);
+  }
+
+  // 3) 트리거 목록
+  var trs = ScriptApp.getProjectTriggers();
+  L.push('[트리거 개수] ' + trs.length);
+  trs.forEach(function (t, i) {
+    var srcId = '';
+    try { srcId = t.getTriggerSourceId(); } catch (e) { srcId = '(없음)'; }
+    L.push('  #' + (i + 1) + ' 함수=' + t.getHandlerFunction()
+      + ' / 이벤트=' + t.getEventType()
+      + ' / 감시시트=' + srcId
+      + (srcId === SPREADSHEET_ID ? ' ✅코드시트와일치'
+        : srcId ? ' ⚠️코드시트와다름' : ''));
+  });
+  if (!trs.length) L.push('  ❌ 트리거 0개 — 발송 후 시트가 절대 안 바뀜! setupTrigger() 실행 필요.');
+
+  // 4) 신청내역 헤더
+  try {
+    var sh = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName('신청내역');
+    if (!sh) {
+      L.push('[신청내역] ❌ 시트 없음');
+    } else {
+      var hd = sh.getRange(1, 1, 1, Math.max(16, sh.getLastColumn())).getValues()[0];
+      L.push('[신청내역 헤더] (' + sh.getLastColumn() + '열)');
+      L.push('  K(11)="' + (hd[10] || '') + '"  ' + (String(hd[10]).trim() === '결제발송' ? '✅' : '❌ 결제발송 아님!'));
+      L.push('  L(12)="' + (hd[11] || '') + '"  ' + (String(hd[11]).trim() === '결제발송시간' ? '✅' : '❌'));
+      L.push('  O(15)="' + (hd[14] || '') + '"  P(16)="' + (hd[15] || '') + '"');
+      L.push('  마지막 데이터 행: ' + sh.getLastRow());
+    }
+  } catch (e) {
+    L.push('[신청내역 헤더] 확인 실패: ' + e);
+  }
+
+  // 5) SOLAPI 자격증명
+  var p = PropertiesService.getScriptProperties();
+  L.push('[SOLAPI] KEY=' + (p.getProperty('SOLAPI_API_KEY') ? 'O' : '❌')
+    + ' SECRET=' + (p.getProperty('SOLAPI_API_SECRET') ? 'O' : '❌')
+    + ' PF_ID=' + (p.getProperty('SOLAPI_PF_ID') ? 'O' : '❌'));
+  L.push('====================================');
+
+  var out = L.join('\n');
+  Logger.log(out);
+  return out;
 }
 
 /* ───────────────────────────────────────────
