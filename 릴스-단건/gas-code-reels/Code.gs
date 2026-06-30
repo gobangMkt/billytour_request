@@ -521,8 +521,12 @@ function handleCompleteSend(e, sheet, row) {
   var phone = String(rowData[3]).replace(/[^0-9]/g, '');  // D: 연락처
   var name  = String(rowData[2] || '').trim();            // C: 신청자명
 
+  // 결과물URL(M) + 완료파일URL(N) 두 값을 #{결과물} 변수 하나에 합쳐 전달
+  // 템플릿 고정 문구 "■ 릴스링크 :" 아래에 두 줄로 떨어지도록 구성
+  var combined = '\n▶ 결과물 : ' + resultUrl + '\n▶ 완료파일 : ' + rawFileUrl;
+
   try {
-    var res  = sendAlimtalk(phone, TEMPLATE_COMPLETE_REELS, { '#{신청자}': name, '#{결과물}': resultUrl });
+    var res  = sendAlimtalk(phone, TEMPLATE_COMPLETE_REELS, { '#{신청자}': name, '#{결과물}': combined });
     var code = res.getResponseCode();
     var body = JSON.parse(res.getContentText() || '{}');
     if (code !== 200 || (body.statusCode && body.statusCode !== '2000')) {
