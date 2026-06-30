@@ -113,9 +113,7 @@ function checkDuplicate(tourUrl, product) {
 function submitForm(formData) {
   var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
 
-  if (checkDuplicate(formData.tourUrl, PRODUCT_LABEL_REELS)) {
-    return { success: false, reason: 'duplicate' };
-  }
+  // 중복 신청 차단 제거 — 동일 URL/상품도 그대로 접수
 
   var sheet        = ss.getSheetByName('신청내역');
   var now          = new Date();
