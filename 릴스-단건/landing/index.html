@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>빌리투어 숏폼 제작 안내 — 기존 원장님 전용</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+:root{
+  --navy:#1A3A6B; --navy-deep:#0F2548; --navy-light:#E8EFF8;
+  --primary:#2B85CC; --primary-hover:#1E6FA8; --primary-50:#EEF6FF; --primary-100:#DBEAFE;
+  --gold:#E8B84B; --gold-text:#B0801E; --gold-light:#FDF6E3;
+  --bg-app:#F8FAFC; --surface:#FFFFFF;
+  --t-title:#1A202C; --t-body:#4A5568; --t-caption:#718096;
+  --border:#E2E8F0; --success:#00C73C; --error:#F04452;
+  --r-sm:8px; --r-md:12px; --r-lg:16px;
+  --shadow-card:0 2px 12px rgba(26,58,107,.08);
+  --shadow-cta:0 8px 24px rgba(43,133,204,.32);
+  --maxw:1080px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+  background:var(--bg-app); color:var(--t-body);
+  font-size:16px; line-height:1.65; -webkit-font-smoothing:antialiased;
+}
+img{max-width:100%; display:block;}
+a{color:inherit; text-decoration:none;}
+.wrap{max-width:var(--maxw); margin:0 auto; padding:0 32px;}
+.center{text-align:center;}
+
+/* focus */
+a:focus-visible,button:focus-visible,.cta:focus-visible{
+  outline:3px solid var(--primary); outline-offset:3px; border-radius:var(--r-sm);
+}
+
+/* ── NAV ── */
+.nav{
+  position:sticky; top:0; z-index:50; background:rgba(255,255,255,.92);
+  backdrop-filter:blur(10px); border-bottom:1px solid var(--border);
+}
+.nav-inner{max-width:var(--maxw); margin:0 auto; padding:0 32px; height:64px;
+  display:flex; align-items:center; justify-content:space-between; gap:24px;}
+.logo{display:flex; align-items:center; gap:10px; font-weight:800; color:var(--navy); font-size:18px; letter-spacing:-.4px;}
+.logo .dot{width:30px; height:30px; border-radius:9px;
+  background:linear-gradient(135deg,var(--primary),var(--navy)); display:grid; place-items:center;}
+.nav-menu{display:flex; gap:28px; align-items:center;}
+.nav-menu a{font-size:15px; font-weight:500; color:var(--t-body); transition:color .2s;}
+.nav-menu a:hover{color:var(--primary);}
+.nav-cta{background:var(--primary); color:#fff; padding:10px 20px; border-radius:var(--r-sm);
+  font-weight:700; font-size:15px; transition:transform .2s, background .2s; min-height:44px; display:inline-flex; align-items:center;}
+.nav-cta:hover{background:var(--primary-hover); transform:translateY(-1px);}
+
+/* ── HERO ── */
+.hero{background:linear-gradient(180deg,#FFFFFF 0%,#EEF6FF 55%,#DCEBFB 100%);
+  padding:80px 0 88px; position:relative; overflow:hidden;}
+.hero-badge{display:inline-flex; align-items:center; gap:8px; background:var(--gold-light);
+  color:var(--gold-text); font-weight:700; font-size:14px; padding:8px 16px; border-radius:999px;
+  border:1px solid rgba(176,128,30,.22); margin-bottom:24px;}
+.hero h1{font-size:52px; font-weight:800; line-height:1.24; letter-spacing:-1.4px; color:var(--t-title); margin-bottom:22px;}
+.hero h1 .hl{position:relative; color:var(--primary); font-weight:900;
+  background:linear-gradient(180deg,transparent 60%, rgba(43,133,204,.20) 60%); padding:0 6px; border-radius:6px;}
+.hero .sub{font-size:20px; color:var(--t-body); line-height:1.6; max-width:720px; margin:0 auto 32px;}
+.hero .sub strong{color:var(--navy); font-weight:700;}
+
+/* hero price */
+.hero-price{display:inline-flex; flex-direction:column; align-items:center; gap:2px; margin-bottom:38px;}
+.hero-price .hp-old{font-size:17px; color:var(--t-caption); text-decoration:line-through; font-weight:600;}
+.hero-price .hp-now{display:inline-flex; align-items:baseline; gap:10px; font-size:34px; font-weight:800; color:var(--navy); letter-spacing:-.8px; line-height:1.1;}
+.hero-price .hp-now small{font-size:20px; font-weight:700;}
+.hero-price .hp-badge{font-size:14px; font-weight:800; color:var(--primary); background:var(--primary-50); padding:4px 12px; border-radius:999px; transform:translateY(-3px);}
+.hero-price .hp-vat{display:block; font-size:13px; color:var(--t-caption); font-weight:500; margin-top:4px;}
+
+.metrics{display:grid; grid-template-columns:repeat(4,1fr); gap:16px; max-width:880px; margin:0 auto 44px;}
+.metric{background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg);
+  padding:24px 16px; box-shadow:var(--shadow-card);}
+.metric .ico{color:var(--primary); display:flex; justify-content:center; margin-bottom:10px;}
+.metric .num{font-size:30px; font-weight:800; color:var(--navy); letter-spacing:-.6px; line-height:1.1;}
+.metric .lbl{font-size:13px; color:var(--t-caption); margin-top:6px; font-weight:500;}
+
+.cta{display:inline-flex; align-items:center; justify-content:center; gap:10px;
+  background:linear-gradient(135deg,var(--primary) 0%,var(--navy) 130%); color:#fff;
+  font-size:20px; font-weight:800; padding:20px 48px; border-radius:14px;
+  box-shadow:var(--shadow-cta); border:none; cursor:pointer; min-height:60px;
+  transition:transform .25s cubic-bezier(.16,1,.3,1), box-shadow .25s;}
+.cta:hover{transform:translateY(-3px); box-shadow:0 12px 32px rgba(43,133,204,.42);}
+.cta-note{margin-top:14px; font-size:14px; color:var(--t-caption);}
+
+/* ── SECTION ── */
+section{padding:80px 0;}
+.eyebrow{font-size:14px; font-weight:700; color:var(--primary); letter-spacing:1px; text-transform:uppercase; margin-bottom:14px;}
+.sec-title{font-size:36px; font-weight:800; color:var(--t-title); letter-spacing:-1px; line-height:1.3; margin-bottom:18px;}
+.sec-lead{font-size:18px; color:var(--t-body); max-width:680px; margin:0 auto 8px; line-height:1.7;}
+.sec-lead + .sec-lead{margin-top:0;}
+.emph-line{font-size:20px; font-weight:700; color:var(--navy); margin:8px auto 0;}
+
+/* problem */
+.bg-tint{background:var(--primary-50);}
+.problem-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:20px; margin-top:48px;}
+.prob-card{background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg);
+  padding:32px 28px; text-align:left; box-shadow:var(--shadow-card);}
+.prob-card .ico{color:var(--primary); margin-bottom:16px;}
+.prob-card h3{font-size:19px; font-weight:700; color:var(--t-title); margin-bottom:10px;}
+.prob-card p{font-size:15px; color:var(--t-body); line-height:1.65;}
+
+/* phone mockup showcase */
+.showcase{background:linear-gradient(160deg,var(--navy-deep),var(--navy)); color:#fff;}
+.showcase .eyebrow{color:#7FBFF0;}
+.showcase .sec-title{color:#fff;}
+.showcase .sec-lead{color:#C6D7EC;}
+.show-flex{display:flex; align-items:center; gap:56px; margin-top:56px; justify-content:center; flex-wrap:wrap;}
+.phone{
+  position:relative; width:384px; flex-shrink:0;
+  background:#0B0B0E; border-radius:46px; padding:12px;
+  box-shadow:0 24px 60px rgba(0,0,0,.5), 0 0 0 2px rgba(255,255,255,.06);
+}
+.phone .notch{position:absolute; top:20px; left:50%; transform:translateX(-50%);
+  width:120px; height:28px; background:#0B0B0E; border-radius:999px; z-index:3;}
+.phone-screen{position:relative; border-radius:34px; overflow:hidden;
+  aspect-ratio:36/55; background:#000;}
+.reel-embed{position:absolute; inset:0; width:100%; height:100%; border:0; background:#000;}
+.reel-tag{position:absolute; top:46px; left:16px; z-index:4; display:inline-flex; align-items:center; gap:6px;
+  background:rgba(0,0,0,.5); backdrop-filter:blur(4px); color:#fff; font-size:12px; font-weight:700;
+  padding:6px 12px; border-radius:999px;}
+.reel-center{position:absolute; inset:0; display:grid; place-items:center; z-index:4;}
+.play-btn{width:64px; height:64px; border-radius:999px; background:rgba(255,255,255,.92);
+  display:grid; place-items:center; box-shadow:0 6px 20px rgba(0,0,0,.3);}
+.reel-bottom{position:absolute; left:16px; right:60px; bottom:18px; z-index:4; color:#fff;}
+.reel-bottom .acct{font-size:14px; font-weight:700; margin-bottom:6px; display:flex; align-items:center; gap:6px;}
+.reel-bottom .cap{font-size:13px; line-height:1.5; color:rgba(255,255,255,.92);}
+.reel-side{position:absolute; right:12px; bottom:78px; z-index:4; display:flex; flex-direction:column; gap:18px; align-items:center;}
+.reel-side .item{display:flex; flex-direction:column; align-items:center; gap:3px; color:#fff;}
+.reel-side .item span{font-size:11px; font-weight:700;}
+.views-pop{position:absolute; top:84px; right:14px; z-index:5;
+  background:linear-gradient(135deg,var(--gold),#F2C964); color:#3a2a00; font-weight:800;
+  font-size:13px; padding:8px 14px; border-radius:12px; box-shadow:0 8px 20px rgba(0,0,0,.35);
+  display:flex; align-items:center; gap:7px; transform:rotate(-3deg);}
+.views-pop .big{font-size:22px; line-height:1;}
+
+.show-copy{max-width:380px; text-align:left;}
+.show-copy .kicker{display:inline-flex; align-items:center; gap:8px; background:rgba(127,191,240,.18);
+  color:#7FBFF0; font-weight:700; font-size:14px; padding:7px 15px; border-radius:999px; margin-bottom:20px;}
+.show-copy h3{font-size:28px; font-weight:800; color:#fff; line-height:1.3; margin-bottom:16px; letter-spacing:-.6px;}
+.show-copy h3 em{font-style:normal; color:#7FBFF0;}
+.show-copy p{font-size:16px; color:#C6D7EC; line-height:1.7; margin-bottom:14px;}
+.show-stats{display:flex; gap:14px; margin-top:26px;}
+.show-stat{background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.12);
+  border-radius:var(--r-md); padding:16px 20px; flex:1;}
+.show-stat .n{font-size:26px; font-weight:800; color:#fff;}
+.show-stat .l{font-size:13px; color:#9FB6D4; margin-top:4px;}
+
+/* process */
+.steps{display:grid; grid-template-columns:repeat(4,1fr); gap:20px; margin-top:52px;}
+.step{position:relative; background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg);
+  padding:32px 24px; text-align:center; box-shadow:var(--shadow-card);}
+.step .no{font-size:13px; font-weight:800; color:var(--primary); letter-spacing:1px; margin-bottom:14px;}
+.step .ico{color:var(--navy); display:flex; justify-content:center; margin-bottom:14px;}
+.step h3{font-size:17px; font-weight:700; color:var(--t-title); margin-bottom:8px;}
+.step p{font-size:14px; color:var(--t-body); line-height:1.6;}
+
+/* compare table */
+.compare-wrap{margin-top:48px; overflow-x:auto; border-radius:var(--r-lg); box-shadow:var(--shadow-card); border:1px solid var(--border);}
+table{width:100%; border-collapse:collapse; background:var(--surface); min-width:560px;}
+thead th{background:var(--navy); color:#fff; font-size:16px; font-weight:700; padding:18px 20px; text-align:center;}
+thead th.hl-col{background:var(--primary);}
+tbody td{padding:18px 20px; font-size:15px; border-bottom:1px solid var(--border); text-align:center; color:var(--t-body);}
+tbody td.row-h{text-align:left; font-weight:700; color:var(--t-title); background:#F8FAFC;}
+tbody td.hl-col{background:var(--primary-50); font-weight:700; color:var(--navy);}
+tbody tr:last-child td{border-bottom:none;}
+.tick{color:var(--primary); display:inline-flex; vertical-align:middle;}
+.cross{color:#A0AEC0; display:inline-flex; vertical-align:middle;}
+
+/* pricing */
+.bg-navy{background:linear-gradient(165deg,var(--navy),var(--navy-deep)); color:#fff;}
+.bg-navy .eyebrow{color:#7FBFF0;}
+.bg-navy .sec-title{color:#fff;}
+.bg-navy .sec-lead{color:#C6D7EC;}
+.price-card{max-width:480px; margin:48px auto 0; background:#fff; border-radius:24px; padding:44px 40px;
+  box-shadow:0 24px 60px rgba(0,0,0,.3); text-align:center; color:var(--t-body); position:relative;}
+.price-flag{position:absolute; top:-16px; left:50%; transform:translateX(-50%);
+  background:var(--gold); color:#3a2a00; font-weight:800; font-size:14px; padding:8px 22px; border-radius:999px;
+  box-shadow:0 6px 16px rgba(232,184,75,.4); white-space:nowrap;}
+.price-card .pname{font-size:20px; font-weight:700; color:var(--t-title); margin-bottom:20px; margin-top:6px;}
+.price-discount-row{display:inline-flex; align-items:center; gap:10px; background:var(--primary-50);
+  color:var(--primary); font-weight:800; font-size:15px; padding:6px 16px; border-radius:999px; margin-bottom:18px;}
+.price-old{font-size:26px; font-weight:600; color:var(--t-caption); text-decoration:line-through; line-height:1.2;}
+.price-now{font-size:56px; font-weight:800; color:var(--navy); letter-spacing:-1.6px; line-height:1.1; margin-top:4px;}
+.price-now small{font-size:24px; font-weight:700;}
+.price-vat{font-size:15px; color:var(--t-caption); font-weight:500; margin-top:8px;}
+.price-incl{display:grid; gap:12px; text-align:left; margin:30px 0; padding:24px 0; border-top:1px solid var(--border); border-bottom:1px solid var(--border);}
+.price-incl li{display:flex; align-items:flex-start; gap:12px; font-size:15px; color:var(--t-body); list-style:none;}
+.price-incl .tick{flex-shrink:0; margin-top:2px;}
+.price-card .cta{width:100%; margin-top:4px;}
+
+/* faq */
+.faq-list{max-width:760px; margin:48px auto 0; text-align:left;}
+.faq{background:var(--surface); border:1px solid var(--border); border-radius:var(--r-md);
+  padding:24px 28px; margin-bottom:14px; box-shadow:var(--shadow-card);}
+.faq h3{font-size:17px; font-weight:700; color:var(--t-title); margin-bottom:10px; display:flex; gap:10px; align-items:flex-start;}
+.faq h3 .q{color:var(--primary); font-weight:800; flex-shrink:0;}
+.faq p{font-size:15px; color:var(--t-body); line-height:1.7; padding-left:26px;}
+
+/* final */
+.final{background:linear-gradient(180deg,#EEF6FF,#DCEBFB); text-align:center;}
+.final .sec-title{margin-bottom:16px;}
+.final .urgency{display:inline-flex; align-items:center; gap:8px; background:#FFF0F2; color:var(--error);
+  font-weight:700; font-size:15px; padding:9px 18px; border-radius:999px; margin-bottom:28px;}
+
+/* footer */
+footer{background:var(--navy-deep); color:#9FB6D4; padding:40px 0; text-align:center; font-size:14px;}
+footer .logo{color:#fff; justify-content:center; margin-bottom:12px;}
+
+@media (max-width:1024px){
+  .hero h1{font-size:42px;}
+  .metrics{grid-template-columns:repeat(2,1fr);}
+  .steps{grid-template-columns:repeat(2,1fr);}
+}
+@media (max-width:768px){
+  .nav-menu{display:none;}
+  .wrap{padding:0 20px;}
+  .hero{padding:56px 0 64px;}
+  .hero h1{font-size:33px; letter-spacing:-.8px;}
+  .hero .sub{font-size:17px;}
+  .sec-title{font-size:27px;}
+  section{padding:56px 0;}
+  .problem-grid{grid-template-columns:1fr;}
+  .show-flex{gap:36px;}
+  .show-copy{text-align:center;}
+  .show-stats{justify-content:center;}
+  .phone{width:min(340px,86vw);}
+}
+@media (max-width:480px){
+  .metrics{grid-template-columns:1fr 1fr; gap:12px;}
+  .steps{grid-template-columns:1fr;}
+  .hero h1{font-size:29px;}
+  .cta{font-size:18px; padding:18px 32px; width:100%;}
+  .price-now{font-size:46px;}
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition:none !important; scroll-behavior:auto !important;}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="#top" class="logo">
+      <span class="dot" aria-hidden="true">
+        <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+          <rect x="1" y="5.5" width="11.5" height="9" rx="2.5" fill="#fff"/>
+          <path d="M13.5 8.3L18.5 6V14L13.5 11.7V8.3Z" fill="#fff"/>
+        </svg>
+      </span>
+      빌리투어 숏폼
+    </a>
+    <div class="nav-menu">
+      <a href="#why">왜 숏폼</a>
+      <a href="#showcase">결과물 예시</a>
+      <a href="#process">진행 과정</a>
+      <a href="#compare">가격 비교</a>
+      <a href="#faq">자주 묻는 질문</a>
+    </div>
+    <a href="/" class="nav-cta">신청하기</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<header class="hero" id="top">
+  <div class="wrap center">
+    <span class="hero-badge">
+      <svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M10 2L12.4 7.3L18.1 8L13.9 12L15 18L10 15L5 18L6.1 12L1.9 8L7.6 7.3L10 2Z" fill="#B0801E"/></svg>
+      빌리투어 기존 구매 원장님 전용 혜택
+    </span>
+    <h1>이미 찍어둔 영상이,<br><span class="hl">조회수 터지는 숏폼</span>으로<br>다시 태어납니다</h1>
+    <p class="sub"><strong>추가 촬영 0번.</strong> 기존 투어 영상만 주시면<br>9:16 숏폼으로 편집해 3채널에 올려드립니다.</p>
+
+    <div class="hero-price">
+      <span class="hp-old">정가 100,000원</span>
+      <span class="hp-now">50,000<small>원</small> <span class="hp-badge">50% 할인</span></span>
+      <span class="hp-vat">기존 원장님 전용 · VAT 별도</span>
+    </div>
+
+    <div class="metrics">
+      <div class="metric">
+        <span class="ico"><svg width="28" height="28" viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="1" y="5.5" width="11.5" height="9" rx="2.5" fill="currentColor"/><path d="M13.5 8.3L18.5 6V14L13.5 11.7V8.3Z" fill="currentColor"/></svg></span>
+        <div class="num">9:16</div>
+        <div class="lbl">세로 숏폼 1개 제작</div>
+      </div>
+      <div class="metric">
+        <span class="ico"><svg width="28" height="28" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M12 2L3.5 11.5H9L8 18L16.5 8.5H11L12 2Z" fill="currentColor"/></svg></span>
+        <div class="num">0회</div>
+        <div class="lbl">추가 촬영 없음</div>
+      </div>
+      <div class="metric">
+        <span class="ico"><svg width="28" height="28" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M14.2 8.6A4.5 4.5 0 1 0 6 10.1A3 3 0 0 0 6.5 16H13.5A2.5 2.5 0 0 0 14 11H13.6A4.5 4.5 0 0 0 14.2 8.6Z" fill="currentColor"/><path fill-rule="evenodd" clip-rule="evenodd" d="M10 4L6.8 8H9V13.5H11V8H13.2L10 4Z" fill="#EEF6FF"/></svg></span>
+        <div class="num">3채널</div>
+        <div class="lbl">Shorts·커뮤니티·Reels</div>
+      </div>
+      <div class="metric">
+        <span class="ico"><svg width="28" height="28" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M12.5 3h5.5a1 1 0 0 1 1 1v5.5a1 1 0 1 1-2 0V6.9l-6.5 6.5-3-3-5.3 5.2a1 1 0 0 1-1.4-1.4l6-5.9a1 1 0 0 1 1.4 0l3 3 5.8-5.8H12.5a1 1 0 1 1 0-2z" fill="currentColor"/></svg></span>
+        <div class="num">50%↓</div>
+        <div class="lbl">기존 원장님 할인</div>
+      </div>
+    </div>
+
+    <a href="/" class="cta">
+      숏폼 제작 신청하기
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M11.3 4.3a1 1 0 0 1 1.4 0l5 5a1 1 0 0 1 0 1.4l-5 5a1 1 0 0 1-1.4-1.4L15.6 11H3a1 1 0 1 1 0-2h12.6l-4.3-4.3a1 1 0 0 1 0-1.4z" fill="#fff"/></svg>
+    </a>
+    <p class="cta-note">원장님은 영상만, 편집·자막·업로드는 저희가 합니다.</p>
+  </div>
+</header>
+
+<!-- WHY (problem → solution) -->
+<section id="why" class="bg-tint">
+  <div class="wrap center">
+    <p class="eyebrow">Why Shorts</p>
+    <h2 class="sec-title">좋은 영상을 갖고도,<br>안 올리면 없는 것과 같습니다</h2>
+    <p class="sec-lead">투어 현장의 생생한 장면, 분명 찍어두셨죠.</p>
+    <p class="sec-lead">하지만 가로 영상 그대로는 숏폼 피드에서 묻힙니다.</p>
+    <p class="emph-line">필요한 건 새 촬영이 아니라, 세로로 다시 짜는 편집입니다.</p>
+
+    <div class="problem-grid">
+      <div class="prob-card">
+        <span class="ico"><svg width="32" height="32" viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="1.5" y="2.5" width="17" height="15" rx="3" fill="currentColor"/><circle cx="6" cy="7" r="2" fill="#EEF6FF"/><path d="M1.5 15.5L6.5 10.5L9.5 13.5L12.5 11L18.5 17.5H1.5V15.5Z" fill="#EEF6FF"/></svg></span>
+        <h3>영상은 있는데 손이 안 가요</h3>
+        <p>편집·자막·세로 변환까지 직접 하려니 엄두가 안 납니다. 결국 갤러리에 잠들어 있죠.</p>
+      </div>
+      <div class="prob-card">
+        <span class="ico"><svg width="32" height="32" viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="1" y="4" width="18" height="12" rx="3" fill="currentColor"/><rect x="3.6" y="8.4" width="5.4" height="3.2" rx="1.6" fill="#EEF6FF"/><rect x="11" y="8.4" width="5.4" height="3.2" rx="1.6" fill="#EEF6FF"/></svg></span>
+        <h3>가로 영상은 숏폼에서 작아요</h3>
+        <p>9:16 세로로 재구성하고 자막을 입혀야 피드에서 멈칫하게 만들 수 있습니다.</p>
+      </div>
+      <div class="prob-card">
+        <span class="ico"><svg width="32" height="32" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M14.2 8.6A4.5 4.5 0 1 0 6 10.1A3 3 0 0 0 6.5 16H13.5A2.5 2.5 0 0 0 14 11H13.6A4.5 4.5 0 0 0 14.2 8.6Z" fill="currentColor"/><path fill-rule="evenodd" clip-rule="evenodd" d="M10 4L6.8 8H9V13.5H11V8H13.2L10 4Z" fill="#EEF6FF"/></svg></span>
+        <h3>채널마다 따로 올리기 번거로워요</h3>
+        <p>Shorts·커뮤니티·Reels를 일일이 올리기 지칩니다. 한 번에 배포해 드립니다.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SHOWCASE: phone mockup -->
+<section id="showcase" class="showcase">
+  <div class="wrap center">
+    <p class="eyebrow">Result Preview</p>
+    <h2 class="sec-title">완성된 숏폼은 이렇게 나옵니다</h2>
+    <p class="sec-lead">손에 쥔 폰 화면 그대로, 세로 가득 채우는 9:16 숏폼.</p>
+
+    <div class="show-flex">
+      <!-- phone -->
+      <div class="phone">
+        <span class="notch" aria-hidden="true"></span>
+        <div class="phone-screen">
+          <iframe class="reel-embed" src="https://www.instagram.com/reel/DYT__Gzve1L/embed/" scrolling="no" allowtransparency="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" title="빌리투어 인스타 릴스 예시"></iframe>
+        </div>
+      </div>
+
+      <!-- copy -->
+      <div class="show-copy">
+        <span class="kicker">
+          <svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M12.5 3h5.5a1 1 0 0 1 1 1v5.5a1 1 0 1 1-2 0V6.9l-6.5 6.5-3-3-5.3 5.2a1 1 0 0 1-1.4-1.4l6-5.9a1 1 0 0 1 1.4 0l3 3 5.8-5.8H12.5a1 1 0 1 1 0-2z" fill="#7FBFF0"/></svg>
+          실제 제작 사례
+        </span>
+        <h3>같은 원본 영상으로,<br><em>조회수 14만</em>을 만들었습니다</h3>
+        <p>새로 찍은 게 아닙니다. 기존 영상을 세로로 재편집하고<br>자막을 얹었을 뿐인데 피드에서 멈추는 숏폼이 됐습니다.</p>
+        <p>원장님 영상에도 같은 잠재력이 있습니다.</p>
+        <div class="show-stats">
+          <div class="show-stat"><div class="n">14만</div><div class="l">누적 조회수</div></div>
+          <div class="show-stat"><div class="n">9:16</div><div class="l">세로 풀스크린</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROCESS -->
+<section id="process">
+  <div class="wrap center">
+    <p class="eyebrow">How it works</p>
+    <h2 class="sec-title">신청부터 업로드까지, 4단계면 끝</h2>
+    <p class="sec-lead">원장님이 하실 일은 영상 전달 하나뿐입니다.</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="no">STEP 01</div>
+        <span class="ico"><svg width="30" height="30" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M14.2 8.6A4.5 4.5 0 1 0 6 10.1A3 3 0 0 0 6.5 16H13.5A2.5 2.5 0 0 0 14 11H13.6A4.5 4.5 0 0 0 14.2 8.6Z" fill="currentColor"/><path fill-rule="evenodd" clip-rule="evenodd" d="M10 4L6.8 8H9V13.5H11V8H13.2L10 4Z" fill="#fff"/></svg></span>
+        <h3>영상 전달</h3>
+        <p>기존에 촬영해 둔 투어 영상을 보내주세요. 추가 촬영은 필요 없습니다.</p>
+      </div>
+      <div class="step">
+        <div class="no">STEP 02</div>
+        <span class="ico"><svg width="30" height="30" viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="1" y="5.5" width="11.5" height="9" rx="2.5" fill="currentColor"/><path d="M13.5 8.3L18.5 6V14L13.5 11.7V8.3Z" fill="currentColor"/></svg></span>
+        <h3>세로 숏폼 편집</h3>
+        <p>9:16 세로 포맷으로 재구성하고 자막·리듬을 입혀 숏폼 1개를 완성합니다.</p>
+      </div>
+      <div class="step">
+        <div class="no">STEP 03</div>
+        <span class="ico"><svg width="30" height="30" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M10 3.5a6.5 6.5 0 0 0-5.7 3.4H6.5a1 1 0 1 1 0 2H2.5a1 1 0 0 1-1-1V3.9a1 1 0 1 1 2 0v1.2A8.5 8.5 0 0 1 18.5 10a1 1 0 1 1-2 0A6.5 6.5 0 0 0 10 3.5Z" fill="currentColor"/><path fill-rule="evenodd" clip-rule="evenodd" d="M3.5 10a1 1 0 0 1 1 1 6.5 6.5 0 0 0 11.2 4.5H13.5a1 1 0 1 1 0-2h4a1 1 0 0 1 1 1V18a1 1 0 1 1-2 0v-1.2A8.5 8.5 0 0 1 2.5 11a1 1 0 0 1 1-1Z" fill="currentColor"/></svg></span>
+        <h3>3채널 동시 업로드</h3>
+        <p>유튜브 Shorts·커뮤니티와 인스타 Reels에 한 번에 게시해 드립니다.</p>
+      </div>
+      <div class="step">
+        <div class="no">STEP 04</div>
+        <span class="ico"><svg width="30" height="30" viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="1.5" y="2.5" width="17" height="15" rx="3" fill="currentColor"/><circle cx="6" cy="7" r="2" fill="#fff"/><path d="M1.5 15.5L6.5 10.5L9.5 13.5L12.5 11L18.5 17.5H1.5V15.5Z" fill="#fff"/></svg></span>
+        <h3>편집 원본 제공</h3>
+        <p>완성된 숏폼의 편집 원본 파일을 그대로 드려, 두고두고 다시 쓰실 수 있습니다.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMPARE -->
+<section id="compare" class="bg-tint">
+  <div class="wrap center">
+    <p class="eyebrow">Value Check</p>
+    <h2 class="sec-title">직접 맡기면 얼마나 들까요?</h2>
+    <p class="sec-lead">외주 편집·업로드 대행 시장 단가와 비교하면 차이가 분명합니다.</p>
+    <p class="emph-line">기존 원장님께는 정가의 절반, 50,000원 (VAT 별도)</p>
+
+    <div class="compare-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">항목</th>
+            <th scope="col">일반 외주 편집</th>
+            <th scope="col" class="hl-col">빌리투어 숏폼 (원장님 전용)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="row-h">세로 9:16 숏폼 편집</td>
+            <td>건당 8~15만원</td>
+            <td class="hl-col">포함</td>
+          </tr>
+          <tr>
+            <td class="row-h">자막·리듬 편집</td>
+            <td>별도 추가 비용</td>
+            <td class="hl-col">포함</td>
+          </tr>
+          <tr>
+            <td class="row-h">3채널 동시 업로드</td>
+            <td><span class="cross" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.3 4.3a1.2 1.2 0 0 1 1.7 0L10 8.3l4-4a1.2 1.2 0 1 1 1.7 1.7L11.7 10l4 4a1.2 1.2 0 0 1-1.7 1.7L10 11.7l-4 4a1.2 1.2 0 0 1-1.7-1.7L8.3 10 4.3 6a1.2 1.2 0 0 1 0-1.7z" fill="currentColor"/></svg></span> 직접</td>
+            <td class="hl-col"><span class="tick" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M16.7 5.3a1.2 1.2 0 0 1 0 1.7l-8 8a1.2 1.2 0 0 1-1.7 0L3.3 11.3a1.2 1.2 0 0 1 1.7-1.7L8 12.7l7.1-7.1c.5-.5 1.2-.5 1.7 0z" fill="currentColor"/></svg></span> 대행</td>
+          </tr>
+          <tr>
+            <td class="row-h">편집 원본 제공</td>
+            <td>대부분 미제공</td>
+            <td class="hl-col"><span class="tick" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M16.7 5.3a1.2 1.2 0 0 1 0 1.7l-8 8a1.2 1.2 0 0 1-1.7 0L3.3 11.3a1.2 1.2 0 0 1 1.7-1.7L8 12.7l7.1-7.1c.5-.5 1.2-.5 1.7 0z" fill="currentColor"/></svg></span> 제공</td>
+          </tr>
+          <tr>
+            <td class="row-h">추가 촬영 부담</td>
+            <td>필요할 수 있음</td>
+            <td class="hl-col">없음 (기존 영상 활용)</td>
+          </tr>
+          <tr>
+            <td class="row-h">최종 비용</td>
+            <td>10만원 이상</td>
+            <td class="hl-col">50,000원 (VAT 별도)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section id="pricing" class="bg-navy">
+  <div class="wrap center">
+    <p class="eyebrow">Pricing</p>
+    <h2 class="sec-title">기존 원장님 전용 50% 할인</h2>
+    <p class="sec-lead">빌리투어를 이미 구매하신 원장님께만 드리는 가격입니다.</p>
+
+    <div class="price-card">
+      <span class="price-flag">기존 구매 원장님 전용 · 50% OFF</span>
+      <div class="pname">숏폼 제작 1개</div>
+
+      <div class="price-discount-row">
+        <svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M12 2L3.5 11.5H9L8 18L16.5 8.5H11L12 2Z" fill="#2B85CC"/></svg>
+        50% 할인 적용가
+      </div>
+      <div class="price-old">100,000원</div>
+      <div class="price-now">50,000<small>원</small></div>
+      <div class="price-vat">VAT 별도</div>
+
+      <ul class="price-incl">
+        <li><span class="tick"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M16.7 5.3a1.2 1.2 0 0 1 0 1.7l-8 8a1.2 1.2 0 0 1-1.7 0L3.3 11.3a1.2 1.2 0 0 1 1.7-1.7L8 12.7l7.1-7.1c.5-.5 1.2-.5 1.7 0z" fill="#2B85CC"/></svg></span> 세로 9:16 숏폼 1개 제작 (기존 영상 활용)</li>
+        <li><span class="tick"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M16.7 5.3a1.2 1.2 0 0 1 0 1.7l-8 8a1.2 1.2 0 0 1-1.7 0L3.3 11.3a1.2 1.2 0 0 1 1.7-1.7L8 12.7l7.1-7.1c.5-.5 1.2-.5 1.7 0z" fill="#2B85CC"/></svg></span> 자막·리듬 편집 포함</li>
+        <li><span class="tick"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M16.7 5.3a1.2 1.2 0 0 1 0 1.7l-8 8a1.2 1.2 0 0 1-1.7 0L3.3 11.3a1.2 1.2 0 0 1 1.7-1.7L8 12.7l7.1-7.1c.5-.5 1.2-.5 1.7 0z" fill="#2B85CC"/></svg></span> 유튜브 Shorts·커뮤니티 + 인스타 Reels 동시 업로드</li>
+        <li><span class="tick"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M16.7 5.3a1.2 1.2 0 0 1 0 1.7l-8 8a1.2 1.2 0 0 1-1.7 0L3.3 11.3a1.2 1.2 0 0 1 1.7-1.7L8 12.7l7.1-7.1c.5-.5 1.2-.5 1.7 0z" fill="#2B85CC"/></svg></span> 편집 원본 파일 제공</li>
+      </ul>
+
+      <a href="/" class="cta">
+        지금 신청하기
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M11.3 4.3a1 1 0 0 1 1.4 0l5 5a1 1 0 0 1 0 1.4l-5 5a1 1 0 0 1-1.4-1.4L15.6 11H3a1 1 0 1 1 0-2h12.6l-4.3-4.3a1 1 0 0 1 0-1.4z" fill="#fff"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq">
+  <div class="wrap center">
+    <p class="eyebrow">FAQ</p>
+    <h2 class="sec-title">자주 묻는 질문</h2>
+    <p class="sec-lead">신청 전 궁금한 점을 모았습니다.</p>
+
+    <div class="faq-list">
+      <div class="faq">
+        <h3><span class="q">Q.</span> 영상을 새로 찍어야 하나요?</h3>
+        <p>아니요. 기존에 촬영해 두신 투어 영상만 주시면 됩니다. 추가 촬영은 전혀 필요하지 않습니다.</p>
+      </div>
+      <div class="faq">
+        <h3><span class="q">Q.</span> 어떤 채널에 올려주시나요?</h3>
+        <p>유튜브 Shorts와 커뮤니티, 그리고 인스타그램 Reels에 동시 업로드해 드립니다. 한 번 맡기시면 세 곳에 모두 게시됩니다.</p>
+      </div>
+      <div class="faq">
+        <h3><span class="q">Q.</span> 편집 원본도 받을 수 있나요?</h3>
+        <p>네. 완성된 숏폼의 편집 원본 파일을 함께 드립니다. 이후 다른 곳에 재활용하시거나 보관하실 수 있습니다.</p>
+      </div>
+      <div class="faq">
+        <h3><span class="q">Q.</span> 왜 50%나 할인되나요?</h3>
+        <p>빌리투어를 이미 구매하신 기존 원장님께만 드리는 전용 혜택입니다. 정가 10만원 대비 절반 가격인 50,000원(VAT 별도)에 제공됩니다.</p>
+      </div>
+      <div class="faq">
+        <h3><span class="q">Q.</span> 숏폼은 몇 개 제작되나요?</h3>
+        <p>이 상품은 세로 9:16 숏폼 1개 제작입니다. 추가 제작이 필요하시면 신청 시 함께 문의해 주세요.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section class="final">
+  <div class="wrap center">
+    <span class="urgency">
+      <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="8.5" fill="#F04452"/><path fill-rule="evenodd" clip-rule="evenodd" d="M10 4.8a1 1 0 0 1 1 1V9.6l2.5 1.5a1 1 0 1 1-1 1.7l-3-1.8a1 1 0 0 1-.5-.9V5.8a1 1 0 0 1 1-1z" fill="#fff"/></svg>
+      50% 할인은 기존 구매 원장님 전용 혜택입니다
+    </span>
+    <h2 class="sec-title">잠들어 있는 영상,<br>지금 숏폼으로 깨우세요</h2>
+    <p class="sec-lead">추가 촬영 없이, 5만원(VAT 별도)으로 시작합니다.</p>
+    <div style="margin-top:32px;">
+      <a href="/" class="cta">
+        숏폼 제작 신청하기
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M11.3 4.3a1 1 0 0 1 1.4 0l5 5a1 1 0 0 1 0 1.4l-5 5a1 1 0 0 1-1.4-1.4L15.6 11H3a1 1 0 1 1 0-2h12.6l-4.3-4.3a1 1 0 0 1 0-1.4z" fill="#fff"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="logo">
+      <span class="dot" aria-hidden="true" style="width:26px;height:26px;border-radius:8px;">
+        <svg width="15" height="15" viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="1" y="5.5" width="11.5" height="9" rx="2.5" fill="#fff"/><path d="M13.5 8.3L18.5 6V14L13.5 11.7V8.3Z" fill="#fff"/></svg>
+      </span>
+      빌리투어 숏폼 제작
+    </div>
+    <p>빌리투어 기존 구매 원장님 전용 숏폼 제작 안내 · 표기 금액은 공급가(VAT 별도)입니다.</p>
+  </div>
+</footer>
+
+</body>
+</html>

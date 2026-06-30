@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>빌리투어 숏폼 제작 신청 (기존 원장님 전용)</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { width: 100%; }
+
+    body {
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #F8FAFC;
+      min-height: 100vh;
+      padding: 0;
+      width: 100%;
+      overflow-x: hidden;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      position: relative; overflow: hidden;
+      background: linear-gradient(160deg, #1A3A6B 0%, #0F2548 100%);
+      color: #fff; padding: 40px 24px 34px;
+    }
+    .hero-inner { max-width: 480px; margin: 0 auto; position: relative; z-index: 1; }
+    .hero::before {
+      content: ''; position: absolute; width: 220px; height: 220px;
+      border-radius: 60px; background: rgba(255,255,255,.05);
+      top: -70px; right: -60px; transform: rotate(18deg); pointer-events: none;
+    }
+    .hero-brand { font-size: 13px; font-weight: 700; letter-spacing: 0.4px; color: #8FB6E0; margin-bottom: 12px; }
+    .hero h1 { font-size: 23px; font-weight: 800; line-height: 1.35; letter-spacing: -0.6px; }
+    .hero h1 .hl { color: #E8B84B; }
+    .hero p { font-size: 14px; font-weight: 500; color: rgba(255,255,255,.82); line-height: 1.65; margin-top: 10px; }
+    .hero-steps { display: flex; gap: 8px; margin-top: 18px; }
+    .hero-step {
+      flex: 1; font-size: 12px; font-weight: 600; color: rgba(255,255,255,.92);
+      background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.16);
+      border-radius: 9px; padding: 9px 8px; text-align: center; letter-spacing: -0.2px;
+    }
+    .hero-step b { display: block; font-size: 14px; font-weight: 800; color: #E8B84B; margin-bottom: 2px; }
+
+    .page { max-width: 480px; margin: 0 auto; padding: 0 0 90px; }
+
+    .section { background: #fff; margin-top: 8px; padding: 20px 20px 16px; }
+
+    .section-title {
+      font-size: 13px; font-weight: 600; color: #8B95A1;
+      margin-bottom: 16px; letter-spacing: 0.3px;
+    }
+
+    .field { margin-bottom: 16px; }
+    .field:last-child { margin-bottom: 0; }
+
+    .field-label {
+      font-size: 14px; font-weight: 600; color: #1A202C;
+      margin-bottom: 8px; display: flex; align-items: center; gap: 4px;
+    }
+
+    input, textarea {
+      width: 100%; padding: 14px 16px;
+      border: 1.5px solid #E5E8EB; border-radius: 10px;
+      font-size: 15px; font-family: inherit; color: #1A202C;
+      background: #fff; outline: none;
+      transition: border-color 0.15s; -webkit-appearance: none;
+    }
+
+    input::placeholder, textarea::placeholder { color: #B0B8C1; }
+    input:focus, textarea:focus { border-color: #2B85CC; }
+    input.valid { border-color: #00C73C; }
+    input.invalid { border-color: #F04452; }
+
+    textarea { resize: none; height: 100px; line-height: 1.6; }
+
+    .feedback {
+      font-size: 12px; margin-top: 6px; min-height: 16px;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .feedback.ok { color: #00C73C; }
+    .feedback.error { color: #F04452; }
+
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    /* 상품 카드 (단일) */
+    .product-cards { display: flex; flex-direction: column; gap: 12px; }
+
+    .product-card {
+      border: 2px solid #1A3A6B; border-radius: 12px;
+      padding: 16px; background: #F0F4FA;
+      position: relative;
+    }
+
+    .product-name {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+      font-size: 16px; font-weight: 700; color: #1A202C; margin-bottom: 6px;
+    }
+    .product-pill {
+      font-size: 11px; font-weight: 700; color: #fff;
+      background: #1A3A6B; border-radius: 6px; padding: 2px 8px;
+    }
+
+    .product-price-wrap { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; flex-wrap: wrap; }
+    .product-price { font-size: 22px; font-weight: 700; color: #1A3A6B; }
+    .product-price-orig {
+      font-size: 14px; color: #B0B8C1; text-decoration: line-through;
+    }
+    .product-save {
+      font-size: 12px; font-weight: 800; color: #fff; background: #2B85CC;
+      border-radius: 6px; padding: 2px 8px;
+    }
+    .product-vat { font-size: 12px; color: #8B95A1; margin-bottom: 8px; }
+    .product-desc { font-size: 13px; color: #8B95A1; line-height: 1.6; }
+
+    /* 상품 예시 보기 — 재생 링크 */
+    .product-example-btn {
+      display: inline-flex; align-items: center; gap: 7px;
+      margin-top: 14px;
+      font-size: 13px; font-weight: 600; color: #2B85CC;
+      background: none; border: none; padding: 0; cursor: pointer;
+      font-family: inherit;
+    }
+    .product-example-btn .play-dot {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 19px; height: 19px; border-radius: 50%;
+      background: #2B85CC; color: #fff; font-size: 8px; padding-left: 1px;
+      flex-shrink: 0; transition: background 0.15s;
+    }
+    .product-example-btn .label { text-decoration: underline; text-underline-offset: 3px; }
+    .product-example-btn:hover { color: #1A6EB0; }
+    .product-example-btn:hover .play-dot { background: #1A6EB0; }
+
+    /* 혜택 리스트 */
+    .benefit { margin-top: 14px; }
+    .benefit ul { list-style: none; display: flex; flex-direction: column; gap: 9px; }
+    .benefit li {
+      font-size: 13.5px; color: #4A5568; line-height: 1.5;
+      display: flex; align-items: flex-start; gap: 9px; letter-spacing: -0.2px;
+    }
+    .benefit li svg { flex: none; margin-top: 2px; }
+    .benefit li b { color: #1A202C; font-weight: 700; }
+
+    /* 예시 모달 임베드 */
+    .example-yt {
+      position: relative; width: 100%; padding-top: 56.25%;
+      border-radius: 12px; overflow: hidden; background: #000;
+    }
+    .example-yt iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: none; }
+    .example-ig {
+      width: 100%; max-width: 320px; margin: 0 auto;
+      border-radius: 12px; overflow: hidden; background: #fff;
+    }
+    .example-ig iframe { width: 100%; height: 600px; border: none; display: block; }
+
+    /* 동의 체크박스 */
+    .agree-row {
+      display: flex; align-items: center; gap: 12px; cursor: pointer;
+      background: #F8FAFF; border: 1.5px solid #A4CCE8;
+      border-radius: 10px; padding: 14px 16px;
+    }
+    .agree-text { font-size: 14px; color: #4A5568; line-height: 1.5; flex: 1; letter-spacing: -0.3px; word-break: keep-all; }
+    .agree-text strong { color: #1A202C; }
+
+    .toggle-wrap { position: relative; width: 22px; height: 22px; flex-shrink: 0; margin-top: 1px; }
+    .toggle-input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .toggle-slider {
+      position: absolute; inset: 0;
+      background: #fff; border: 2px solid #C4CBD4; border-radius: 5px; cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .toggle-slider::before {
+      content: ''; position: absolute;
+      width: 5px; height: 10px;
+      left: 6px; top: 2px;
+      border-right: 2.5px solid transparent;
+      border-bottom: 2.5px solid transparent;
+      transform: rotate(45deg);
+      transition: border-color 0.15s;
+    }
+    .toggle-input:checked + .toggle-slider { background: #2B85CC; border-color: #2B85CC; }
+    .toggle-input:checked + .toggle-slider::before { border-color: #fff; }
+
+    .char-count { font-size: 12px; color: #B0B8C1; text-align: right; margin-top: 6px; }
+
+    /* 유튜브 바로가기 링크 (보조 텍스트) */
+    .yt-shortcut {
+      font-size: 12px; font-weight: 500; color: #8B95A1;
+      text-decoration: none; white-space: nowrap;
+    }
+    .yt-shortcut:hover { color: #2B85CC; text-decoration: underline; }
+
+    /* 유튜브 자동 미리보기 */
+    .yt-preview {
+      margin-top: 10px; display: flex; gap: 12px; align-items: center;
+      background: #F8FAFF; border: 1.5px solid #A4CCE8; border-radius: 10px; padding: 10px;
+    }
+    .yt-preview img {
+      width: 104px; height: 58px; object-fit: cover; border-radius: 6px; flex-shrink: 0;
+    }
+    .yt-meta { min-width: 0; }
+    .yt-title {
+      font-size: 13px; font-weight: 600; color: #1A202C; line-height: 1.4;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .yt-channel { font-size: 12px; color: #8B95A1; margin-top: 4px; }
+    .yt-preview.note {
+      justify-content: center; padding: 14px; font-size: 13px; color: #8B95A1;
+      background: #F8FAFC; border-color: #E5E8EB;
+    }
+
+    /* 지점 자동 검증 카드 */
+    .place-card {
+      margin-top: 10px; display: flex; gap: 12px; align-items: flex-start;
+      background: #F0F4FA; border: 1.5px solid #A4CCE8; border-radius: 12px; padding: 12px;
+    }
+    .place-card img {
+      width: 92px; height: 92px; object-fit: cover; border-radius: 8px; flex-shrink: 0;
+    }
+    .place-meta { min-width: 0; flex: 1; }
+    .place-name {
+      font-size: 15px; font-weight: 700; color: #1A3A6B; line-height: 1.4;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .place-addr { font-size: 13px; color: #4A5568; margin-top: 3px; word-break: keep-all; }
+    .place-link {
+      display: inline-block; font-size: 12px; color: #2B85CC; margin-top: 5px;
+      text-decoration: none; word-break: break-all;
+    }
+    .place-link:hover { text-decoration: underline; }
+    .place-sub  { font-size: 12px; color: #2B85CC; margin-top: 4px; font-weight: 600; }
+    .place-yt {
+      font-size: 12px; color: #8B95A1; margin-top: 6px;
+      display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .place-confirm {
+      font-size: 12px; color: #1A3A6B; font-weight: 700; margin-top: 8px;
+      padding-top: 8px; border-top: 1px dashed #A4CCE8;
+    }
+
+    .notice-card {
+      background: #F8FAFF;
+      border: 1.5px solid #A4CCE8;
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-top: 8px;
+    }
+    .notice-card ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .notice-card li {
+      font-size: 14px;
+      color: #4A5568;
+      line-height: 1.6;
+      padding-left: 16px;
+      position: relative;
+    }
+    .notice-card li::before {
+      content: '·';
+      position: absolute;
+      left: 4px;
+      color: #2B85CC;
+      font-weight: 700;
+    }
+
+    /* 하단 CTA */
+    .bottom-bar {
+      position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+      width: 100%; max-width: 480px;
+      padding: 12px 20px 16px;
+      background: #fff; border-top: 1px solid #F8FAFC;
+    }
+
+    button[type="submit"] {
+      width: 100%; padding: 15px; background: #2B85CC; color: #fff;
+      border: none; border-radius: 10px; font-size: 16px; font-weight: 700;
+      font-family: inherit; cursor: pointer; transition: background 0.15s;
+    }
+    button[type="submit"]:hover:not(:disabled) { background: #1A6EB0; }
+    button[type="submit"]:disabled { background: #E5E8EB; color: #B0B8C1; cursor: not-allowed; }
+
+    /* 화면 상태 */
+    .off-screen {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; min-height: 100vh; padding: 40px 20px; text-align: center;
+    }
+    .off-icon {
+      width: 56px; height: 56px; background: #F8FAFC; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px; margin-bottom: 16px;
+    }
+    .off-screen h2 { font-size: 18px; font-weight: 700; color: #1A202C; margin-bottom: 8px; }
+    .off-screen p { font-size: 14px; color: #8B95A1; line-height: 1.6; }
+
+    .success-screen {
+      display: none; flex-direction: column; align-items: center;
+      justify-content: center; min-height: 100vh; padding: 40px 20px; text-align: center;
+    }
+    .success-logo { margin-bottom: 24px; }
+    .success-logo img { height: 48px; }
+    .success-screen h2 { font-size: 22px; font-weight: 700; color: #1A202C; margin-bottom: 12px; }
+    .success-screen p { font-size: 15px; color: #8B95A1; line-height: 1.7; }
+
+    /* 모달 */
+    .modal-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 100;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .modal-overlay.show { display: flex; }
+
+    .modal-sheet {
+      background: #fff;
+      border-radius: 20px 20px 0 0;
+      padding: 28px 24px 32px;
+      width: 100%; max-width: 480px;
+      max-height: 90vh;
+      overflow-y: auto;
+      animation: slideUp 0.2s ease;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+
+    .modal-icon {
+      width: 48px; height: 48px; background: #F8FAFC;
+      border-radius: 50%; display: flex; align-items: center;
+      justify-content: center; font-size: 22px; margin-bottom: 16px;
+    }
+    .modal-title { font-size: 20px; font-weight: 700; color: #1A202C; margin-bottom: 8px; }
+    .modal-desc { font-size: 15px; color: #8B95A1; line-height: 1.6; margin-bottom: 16px; }
+
+    .modal-summary {
+      background: #F8FAFF; border: 1.5px solid #E5E8EB;
+      border-radius: 10px; padding: 14px 16px;
+      margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px;
+    }
+    .summary-row { display: flex; align-items: flex-start; gap: 8px; }
+    .summary-label { font-size: 13px; color: #8B95A1; font-weight: 500; min-width: 70px; flex-shrink: 0; }
+    .summary-value { font-size: 13px; color: #1A202C; font-weight: 600; word-break: break-all; flex: 1; }
+
+    .modal-btns { display: flex; flex-direction: column; gap: 8px; }
+
+    .btn-confirm {
+      width: 100%; padding: 15px; background: #2B85CC; color: #fff;
+      border: none; border-radius: 10px; font-size: 16px; font-weight: 700;
+      font-family: inherit; cursor: pointer;
+    }
+    .btn-cancel {
+      width: 100%; padding: 15px; background: #EEF1F4; color: #333D4B;
+      border: 1px solid #D1D6DB; border-radius: 10px; font-size: 16px; font-weight: 600;
+      font-family: inherit; cursor: pointer;
+    }
+
+    /* 스피너 */
+    .spinner {
+      display: inline-block;
+      width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media screen and (max-width: 480px) {
+      .page, .hero-inner { max-width: 100%; margin-left: 0; margin-right: 0; }
+      .bottom-bar { left: 0; right: 0; transform: none; max-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- 로딩 화면 -->
+<div class="off-screen" id="loadingScreen">
+  <div class="off-icon" style="font-size:20px;">⏳</div>
+  <h2>불러오는 중...</h2>
+</div>
+
+<!-- 비활성화 화면 -->
+<div class="off-screen" id="offScreen" style="display:none;">
+  <div class="off-icon">🔒</div>
+  <h2>현재 신청을 받지 않고 있어요</h2>
+  <p id="offReason"></p>
+</div>
+
+<!-- 폼 영역 -->
+<div id="form-area" style="display:none;">
+  <header class="hero">
+    <div class="hero-inner">
+      <div class="hero-brand">빌리투어 · 기존 원장님 전용 안내</div>
+      <h1>추가 촬영 없이,<br>기존 영상으로 <span class="hl">세로 숏폼 1개</span> 제작</h1>
+      <p>유튜브 Shorts·커뮤니티 + 인스타 Reels에 동시 업로드하고, 편집 원본까지 드립니다.</p>
+      <div class="hero-steps">
+        <div class="hero-step"><b>1분</b>신청 작성</div>
+        <div class="hero-step"><b>제작</b>9:16 편집</div>
+        <div class="hero-step"><b>업로드</b>동시 게시</div>
+      </div>
+    </div>
+  </header>
+
+  <div class="page">
+    <div class="section" style="margin-top:8px;">
+      <div class="notice-card">
+        <ul>
+          <li>본 상품은 <strong>기존 구매 원장님 전용</strong> 50% 할인가입니다.</li>
+          <li>신청 접수 후 <strong>담당자 확인을 거쳐 결제 링크</strong>가 발송됩니다.</li>
+          <li>결제 완료 후 <strong>영업일 5일 내</strong> 숏폼이 납품됩니다.</li>
+        </ul>
+      </div>
+    </div>
+
+    <form id="applyForm" novalidate>
+
+      <div class="section">
+        <div class="section-title">신청자 정보</div>
+        <div class="row">
+          <div class="field">
+            <div class="field-label">원장님 이름</div>
+            <input type="text" id="name" placeholder="홍길동" autocomplete="off">
+          </div>
+          <div class="field">
+            <div class="field-label">연락처</div>
+            <input type="tel" id="phone" placeholder="010-0000-0000" autocomplete="off" maxlength="13">
+            <div class="feedback" id="fb-phone"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">지점 정보</div>
+        <div class="field">
+          <div class="field-label" style="justify-content:space-between;">
+            <span>빌리투어 영상 링크</span>
+            <a href="https://www.youtube.com/@RoomTour." target="_blank" rel="noopener" class="yt-shortcut">빌리투어 유튜브 ↗</a>
+          </div>
+          <input type="url" id="tourUrl" placeholder="https://youtu.be/..." autocomplete="off">
+          <div class="feedback" id="fb-url"></div>
+          <div id="ytPreview" class="yt-preview" style="display:none;"></div>
+        </div>
+        <div class="field">
+          <div class="field-label">지점명</div>
+          <input type="text" id="branchName" placeholder="영상 링크 입력 시 자동으로 채워져요" autocomplete="off">
+        </div>
+        <div class="field">
+          <div class="field-label">지점 주소</div>
+          <input type="text" id="branchAddr" placeholder="영상 링크 입력 시 자동으로 채워져요" autocomplete="off">
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">상품</div>
+        <div class="product-cards">
+          <label class="product-card" id="card-shortform">
+            <input type="radio" class="product-radio" id="product-shortform" name="product" value="B" checked style="position:absolute;opacity:0;width:0;height:0;">
+            <div class="product-name">숏폼 제작 1개 <span class="product-pill">기존 원장님 전용</span></div>
+            <div class="product-price-wrap">
+              <span class="product-price">50,000원</span>
+              <span class="product-price-orig">100,000원</span>
+              <span class="product-save">50% 할인</span>
+            </div>
+            <div class="product-vat">VAT 별도 · 결제 시 VAT 포함 55,000원</div>
+            <div class="product-desc">기존 영상을 9:16 세로 숏폼 1개로 재편집해 유튜브·인스타에 동시 업로드해 드립니다. 추가 촬영 없음.</div>
+            <button type="button" class="product-example-btn" data-example="B">
+              <span class="play-dot">▶</span><span class="label">예시 영상 보기</span>
+            </button>
+          </label>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">제작 요청사항 (선택)</div>
+        <div class="field">
+          <textarea id="memo" placeholder="강조하고 싶은 장소·분위기, 빼고 싶은 장면·문구 등 편집에 반영할 내용을 자유롭게 적어주세요." maxlength="300"></textarea>
+          <div class="char-count"><span id="charCount">0</span>/300</div>
+        </div>
+      </div>
+
+      <div class="section" style="display:flex;flex-direction:column;gap:10px;">
+        <label class="agree-row" for="agreeToggle">
+          <div class="toggle-wrap">
+            <input type="checkbox" id="agreeToggle" class="toggle-input">
+            <span class="toggle-slider"></span>
+          </div>
+          <span class="agree-text"><strong>고방 공식 채널(유튜브·인스타) 업로드</strong> 및 제작물의 초상권·저작권 활용에 동의하며, <strong>결제 완료 후 작업이 시작</strong>됨을 이해했습니다.</span>
+        </label>
+      </div>
+
+      <div style="height: 20px;"></div>
+
+      <div class="bottom-bar">
+        <button type="submit" id="submitBtn" disabled>신청 접수하기</button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<!-- 최종 확인 모달 -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-sheet">
+    <div class="modal-icon">📋</div>
+    <div class="modal-title">입력 내용 최종 확인</div>
+    <div class="modal-desc">신청 후에는 내용을 수정할 수 없어요.<br>아래 내용이 맞는지 확인해 주세요.</div>
+    <div class="modal-summary" id="modalSummary"></div>
+
+    <div style="border:1.5px solid #E5E8EB;border-radius:10px;margin-bottom:16px;">
+      <div style="background:#F8FAFF;padding:11px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;border-radius:10px 10px 0 0;" id="privacyToggleHeader">
+        <span style="font-size:13px;font-weight:600;color:#1A202C;">개인정보 수집 및 이용 동의 <span style="color:#F04452;">*필수</span></span>
+        <span style="font-size:11px;color:#8B95A1;" id="privacyArrow">▶ 내용 보기</span>
+      </div>
+      <div style="display:none;padding:12px 14px;font-size:12px;color:#4A5568;line-height:1.7;border-top:1px solid #E5E8EB;" id="privacyDetail">
+        <b>수집 항목</b> 이름, 휴대전화번호, 지점명·지점주소<br>
+        <b>수집 목적</b> 서비스 제공 및 신청 관리<br>
+        <b>보유 기간</b> 서비스 종료 후 즉시 파기<br>
+        <span style="color:#8B95A1;">동의 거부 시 서비스 이용이 제한될 수 있습니다.</span>
+      </div>
+      <label id="privacyAgreeLabel" for="privacyAgree" style="display:flex;align-items:center;gap:12px;padding:11px 14px;cursor:pointer;border-top:1px solid #E5E8EB;">
+        <div class="toggle-wrap">
+          <input type="checkbox" id="privacyAgree" class="toggle-input">
+          <span class="toggle-slider"></span>
+        </div>
+        <span class="agree-text">위 내용을 확인하였으며, 개인정보 수집 및 이용에 동의합니다.</span>
+      </label>
+    </div>
+
+    <div class="modal-btns">
+      <button class="btn-confirm" id="modalConfirm" disabled style="opacity:0.4;">동의하고 신청 완료</button>
+      <button class="btn-cancel" id="modalCancel">돌아가기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 상품 예시 모달 -->
+<div class="modal-overlay" id="exampleModal">
+  <div class="modal-sheet">
+    <div class="modal-title" id="exampleTitle">상품 예시</div>
+    <div class="modal-desc" id="exampleDesc"></div>
+    <div id="exampleBody" style="margin-bottom:20px;"></div>
+    <div class="modal-btns">
+      <button class="btn-cancel" id="exampleClose">닫기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 성공 화면 -->
+<div class="success-screen" id="successScreen">
+  <div class="success-logo">
+    <img src="assets/U_ALF.png" alt="U_ALF" />
+  </div>
+  <h2>신청이 접수됐습니다!</h2>
+  <p>담당자 확인 후<br>결제 링크를 발송드립니다.</p>
+</div>
+
+<script>
+  var GAS_URL = 'https://script.google.com/macros/s/AKfycbyI_0OO_zlmI_hnago0E7YJqFGUFzORT4at2iANiWyPq2JHwshGzbl0OY8PSiEi0WjxUg/exec';
+
+  function callAPI(action, params) {
+    if (!GAS_URL) return Promise.resolve({ ok: true });
+    var body = JSON.stringify(Object.assign({ action: action }, params || {}));
+    return fetch(GAS_URL, { method: 'POST', body: body })
+      .then(function(res) { return res.json(); });
+  }
+
+  // 페이지 로드 — 폼 즉시 노출 후 백그라운드에서 checkAccess
+  document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('loadingScreen').style.display = 'none';
+    document.getElementById('form-area').style.display = 'block';
+
+    callAPI('checkAccess').then(function(data) {
+      if (!data.ok) {
+        document.getElementById('form-area').style.display = 'none';
+        document.getElementById('offReason').textContent = data.reason || '';
+        document.getElementById('offScreen').style.display = 'flex';
+      }
+    }).catch(function() {});
+  });
+
+  // 전화번호 포맷
+  function formatPhone(value) {
+    var digits = value.replace(/\D/g, '');
+    if (digits.length <= 3) return digits;
+    if (digits.length <= 7) return digits.slice(0,3) + '-' + digits.slice(3);
+    return digits.slice(0,3) + '-' + digits.slice(3,7) + '-' + digits.slice(7,11);
+  }
+
+  function setFeedback(id, type, msg) {
+    var el = document.getElementById('fb-' + id);
+    el.className = 'feedback ' + type;
+    el.textContent = msg;
+  }
+
+  document.getElementById('phone').addEventListener('input', function() {
+    this.value = formatPhone(this.value);
+    var valid = /^010-\d{4}-\d{4}$/.test(this.value);
+    if (this.value.length === 0) { this.className = ''; setFeedback('phone', '', ''); }
+    else if (valid) { this.className = 'valid'; setFeedback('phone', '', ''); }
+    else { this.className = 'invalid'; setFeedback('phone', 'error', '010-0000-0000 형식으로 입력해 주세요'); }
+    checkSubmit();
+  });
+
+  // 유튜브 URL 유효성 검사
+  function isYoutubeUrl(val) {
+    return /youtu\.be\//.test(val) || /youtube\.com\//.test(val);
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function(c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  // 빌리투어 영상 → 지점 자동 검증
+  var ytTimer = null;
+  var placeInfo = { ytTitle: '', branchName: '', branchAddr: '', thumbnail: '', phone: '', placeUrl: '', walking: '' };
+
+  function emptyPlace() {
+    return { ytTitle: '', branchName: '', branchAddr: '', thumbnail: '', phone: '', placeUrl: '', walking: '' };
+  }
+
+  function clearPlacePreview() {
+    placeInfo = emptyPlace();
+    var p = document.getElementById('ytPreview');
+    p.style.display = 'none'; p.className = 'yt-preview'; p.innerHTML = '';
+  }
+
+  function showPlaceNote(msg) {
+    var p = document.getElementById('ytPreview');
+    p.className = 'yt-preview note'; p.style.display = 'flex'; p.textContent = msg;
+  }
+
+  function renderPlaceCard() {
+    var p = document.getElementById('ytPreview');
+    p.className = 'place-card'; p.style.display = 'flex';
+    var sub = [];
+    if (placeInfo.walking) sub.push(escapeHtml(placeInfo.walking));
+    if (placeInfo.phone)   sub.push(escapeHtml(placeInfo.phone));
+    p.innerHTML =
+      (placeInfo.thumbnail ? '<img src="' + placeInfo.thumbnail + '" alt="">' : '') +
+      '<div class="place-meta">' +
+        '<div class="place-name">' + escapeHtml(placeInfo.branchName || '(지점명 미확인)') + '</div>' +
+        (placeInfo.branchAddr ? '<div class="place-addr">' + escapeHtml(placeInfo.branchAddr) + '</div>' : '') +
+        (placeInfo.placeUrl ? '<a class="place-link" href="' + escapeHtml(placeInfo.placeUrl) + '" target="_blank" rel="noopener">🔗 ' + escapeHtml(placeInfo.placeUrl) + '</a>' : '') +
+        (sub.length ? '<div class="place-sub">' + sub.join(' · ') + '</div>' : '') +
+        (placeInfo.ytTitle ? '<div class="place-yt">🎬 ' + escapeHtml(placeInfo.ytTitle) + '</div>' : '') +
+        '<div class="place-confirm">이 지점이 맞는지 확인해 주세요</div>' +
+      '</div>';
+  }
+
+  function loadPlaceInfo(url) {
+    callAPI('resolvePlace', { url: url })
+      .then(function(d) {
+        if (!d || !d.ok) {
+          placeInfo = emptyPlace();
+          if (d && d.ytTitle) placeInfo.ytTitle = d.ytTitle;
+          showPlaceNote('지점을 자동으로 찾지 못했어요. 지점명·주소를 직접 입력해 주세요.');
+          return;
+        }
+        placeInfo = {
+          ytTitle:    d.ytTitle    || '',
+          branchName: d.branchName || '',
+          branchAddr: d.branchAddr || '',
+          thumbnail:  d.thumbnail  || '',
+          phone:      d.phone      || '',
+          placeUrl:   d.placeUrl   || '',
+          walking:    d.walking    || ''
+        };
+        renderPlaceCard();
+        // 지점명·주소 자동 채움 (수정 가능)
+        if (placeInfo.branchName) document.getElementById('branchName').value = placeInfo.branchName;
+        if (placeInfo.branchAddr) document.getElementById('branchAddr').value = placeInfo.branchAddr;
+        checkSubmit();
+      })
+      .catch(function() {
+        placeInfo = emptyPlace();
+        showPlaceNote('지점 정보를 불러오지 못했어요. 지점명·주소를 직접 입력해 주세요.');
+      });
+  }
+
+  document.getElementById('tourUrl').addEventListener('input', function() {
+    var val = this.value.trim();
+    clearTimeout(ytTimer);
+    if (val.length === 0) {
+      this.className = ''; setFeedback('url', '', ''); clearPlacePreview();
+    } else if (isYoutubeUrl(val)) {
+      this.className = 'valid'; setFeedback('url', 'ok', '올바른 유튜브 링크예요');
+      showPlaceNote('지점 정보를 불러오는 중...');
+      ytTimer = setTimeout(function() { loadPlaceInfo(val); }, 500);
+    } else {
+      this.className = 'invalid'; setFeedback('url', 'error', 'youtu.be 또는 youtube.com 링크를 입력해 주세요');
+      clearPlacePreview();
+    }
+    checkSubmit();
+  });
+
+  document.getElementById('name').addEventListener('input', checkSubmit);
+  document.getElementById('branchName').addEventListener('input', checkSubmit);
+  document.getElementById('branchAddr').addEventListener('input', checkSubmit);
+
+  document.getElementById('memo').addEventListener('input', function() {
+    document.getElementById('charCount').textContent = this.value.length;
+  });
+
+  // 상품 예시 모달
+  var EXAMPLE = {
+    B: {
+      title: '숏폼(숏츠) 예시',
+      desc: '기존 영상으로 제작한 실제 바이럴 릴스입니다.',
+      html: '<div class="example-ig"><iframe src="https://www.instagram.com/p/DYT__Gzve1L/embed" title="숏폼 예시" scrolling="no" allowtransparency="true"></iframe></div>'
+    }
+  };
+
+  document.querySelectorAll('.product-example-btn').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      var ex = EXAMPLE[this.getAttribute('data-example')];
+      if (!ex) return;
+      document.getElementById('exampleTitle').textContent = ex.title;
+      document.getElementById('exampleDesc').textContent = ex.desc;
+      document.getElementById('exampleBody').innerHTML = ex.html;
+      document.getElementById('exampleModal').classList.add('show');
+    });
+  });
+
+  document.getElementById('exampleClose').addEventListener('click', function() {
+    document.getElementById('exampleModal').classList.remove('show');
+    document.getElementById('exampleBody').innerHTML = '';
+  });
+  document.getElementById('exampleModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+      this.classList.remove('show');
+      document.getElementById('exampleBody').innerHTML = '';
+    }
+  });
+
+  function checkSubmit() {
+    var name = document.getElementById('name').value.trim();
+    var phone = document.getElementById('phone').value.trim();
+    var branchName = document.getElementById('branchName').value.trim();
+    var branchAddr = document.getElementById('branchAddr').value.trim();
+    var url = document.getElementById('tourUrl').value.trim();
+    var agreed = document.getElementById('agreeToggle').checked;
+    var ok =
+      name.length >= 2 &&
+      /^010-\d{4}-\d{4}$/.test(phone) &&
+      branchName.length >= 1 &&
+      branchAddr.length >= 2 &&
+      isYoutubeUrl(url) &&
+      agreed === true;
+    document.getElementById('submitBtn').disabled = !ok;
+  }
+
+  document.getElementById('agreeToggle').addEventListener('change', checkSubmit);
+
+  // 폼 submit → 모달 오픈
+  document.getElementById('applyForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    var name = document.getElementById('name').value.trim();
+    var phone = document.getElementById('phone').value.trim();
+    var branchName = document.getElementById('branchName').value.trim();
+    var branchAddr = document.getElementById('branchAddr').value.trim();
+    var url = document.getElementById('tourUrl').value.trim();
+
+    var rows = [
+      { label: '이름', value: name },
+      { label: '연락처', value: phone },
+      { label: '지점명', value: branchName },
+      { label: '지점 주소', value: branchAddr },
+      { label: 'URL', value: url },
+      { label: '선택 상품', value: '숏폼 제작 1개 (50,000원, VAT 별도)' }
+    ];
+    var html = rows.map(function(r) {
+      return '<div class="summary-row"><span class="summary-label">' + r.label + '</span>' +
+             '<span class="summary-value">' + escapeHtml(r.value) + '</span></div>';
+    }).join('');
+    document.getElementById('modalSummary').innerHTML = html;
+    document.getElementById('privacyAgree').checked = false;
+    document.getElementById('modalConfirm').disabled = true;
+    document.getElementById('modalConfirm').style.opacity = '0.4';
+    document.getElementById('privacyDetail').style.display = 'none';
+    document.getElementById('privacyArrow').textContent = '▶ 내용 보기';
+    document.getElementById('modalOverlay').classList.add('show');
+  });
+
+  // 개인정보 접기/펼치기
+  document.getElementById('privacyToggleHeader').addEventListener('click', function() {
+    var detail = document.getElementById('privacyDetail');
+    var arrow = document.getElementById('privacyArrow');
+    var open = detail.style.display !== 'none';
+    detail.style.display = open ? 'none' : 'block';
+    arrow.textContent = open ? '▶ 내용 보기' : '▼ 접기';
+  });
+
+  document.getElementById('privacyAgreeLabel').addEventListener('click', function(e) {
+    e.stopPropagation();
+    setTimeout(function() {
+      var checked = document.getElementById('privacyAgree').checked;
+      var btn = document.getElementById('modalConfirm');
+      btn.disabled = !checked;
+      btn.style.opacity = checked ? '1' : '0.4';
+    }, 0);
+  });
+
+  document.getElementById('modalCancel').addEventListener('click', function() {
+    document.getElementById('modalOverlay').classList.remove('show');
+  });
+
+  // 최종 제출
+  document.getElementById('modalConfirm').addEventListener('click', function() {
+    document.getElementById('modalOverlay').classList.remove('show');
+    var btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>신청 중...';
+
+    callAPI('submitForm', {
+      name: document.getElementById('name').value.trim(),
+      phone: document.getElementById('phone').value.trim(),
+      branchName: document.getElementById('branchName').value.trim(),
+      branchAddr: document.getElementById('branchAddr').value.trim(),
+      tourUrl: document.getElementById('tourUrl').value.trim(),
+      placeUrl: placeInfo.placeUrl,
+      product: 'B',
+      memo: document.getElementById('memo').value.trim()
+    }).then(function(result) {
+      if (result.ok) {
+        document.getElementById('form-area').style.display = 'none';
+        document.getElementById('successScreen').style.display = 'flex';
+      } else {
+        btn.disabled = false; btn.textContent = '신청 접수하기';
+        if (result.reason === 'duplicate') {
+          alert('이미 동일한 URL로 신청된 내역이 있어요. 내용을 확인해 주세요.');
+        } else {
+          alert('오류가 발생했어요. 다시 시도해 주세요.');
+        }
+      }
+    }).catch(function() {
+      btn.disabled = false; btn.textContent = '신청 접수하기';
+      alert('오류가 발생했어요. 다시 시도해 주세요.');
+    });
+  });
+</script>
+</body>
+</html>
