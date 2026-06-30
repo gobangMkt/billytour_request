@@ -555,10 +555,15 @@ function setupDropdowns() {
   if (apply) {
     applyStatusDropdown(apply, 11);  // K: 결제발송
     applyStatusDropdown(apply, 15);  // O: 완료발송
+    // ⚠️ 타임스탬프 열(L 결제발송시간 / P 완료발송시간)에 드롭다운 검증이 박히면
+    //    setValue(시간문자열)이 '데이터 확인 규칙 위반'으로 거부돼 스탬프가 안 찍히고,
+    //    그 예외로 K/O도 '발송완료'로 못 바뀐다 → 타임스탬프 열은 검증을 강제 제거
+    apply.getRange(1, 12, apply.getMaxRows(), 1).clearDataValidations();  // L: 결제발송시간
+    apply.getRange(1, 16, apply.getMaxRows(), 1).clearDataValidations();  // P: 완료발송시간
     applyProductColors(apply, 2);    // B: 상품
   }
 
-  Logger.log('드롭박스 + 색상 설정 완료');
+  Logger.log('드롭박스 + 색상 설정 완료 (L/P 타임스탬프 검증 제거 포함)');
 }
 
 /* 상품 글자색 구분 — 릴스단건 단일 (골드). G열.
@@ -612,7 +617,8 @@ function applyStatusDropdown(sheet, col) {
   range.clearDataValidations();
   range.setDataValidation(
     SpreadsheetApp.newDataValidation()
-      .requireValueInList(['검수중', '발송하기', '발송완료'], false).build()
+      .setAllowInvalid(true)   // 잘못된 값도 거부 않고 경고만 → 코드 setValue가 예외로 안 죽음
+      .requireValueInList(['검수중', '발송하기', '발송완료'], true).build()
   );
 
   // 해당 열 외 기존 조건부 서식 유지
