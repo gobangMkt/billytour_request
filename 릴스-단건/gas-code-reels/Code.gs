@@ -1,6 +1,6 @@
 var SPREADSHEET_ID    = '1kF48mlpvfI-2R1spXXNLECLg-wUd_u_YzcHHO-ztBb0';
 // 결제요청 알림톡 — 릴스단건 전용 템플릿 (버튼 URL에 토스링크가 직접 박혀있음)
-var TEMPLATE_PAYMENT_REELS  = 'KA01TP2606090944184923jC2HDupV2e';  // 빌리투어_결제요청_숏츠 (영업일 5일) — 릴스 재사용
+var TEMPLATE_PAYMENT_REELS  = 'KA01TP260624072928482nzaAw7UG6yY';  // 빌리투어_결제요청_릴스단건 (55,000원) — 토스링크가 버튼 URL에 직접 박힘
 var TEMPLATE_COMPLETE_REELS = 'KA01TP260604101954648epByHA94rV6';  // 빌리투어_작업완료_숏츠 (릴스/인스타 업로드 완료) — 릴스 재사용
 
 // 릴스단건 토스링크 55,000원 (VAT 포함)
@@ -612,7 +612,7 @@ function applyStatusDropdown(sheet, col) {
   range.clearDataValidations();
   range.setDataValidation(
     SpreadsheetApp.newDataValidation()
-      .requireValueInList(['검수중', '발송하기'], false).build()
+      .requireValueInList(['검수중', '발송하기', '발송완료'], false).build()
   );
 
   // 해당 열 외 기존 조건부 서식 유지
